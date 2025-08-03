@@ -6,8 +6,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './jwt.strategy';
-import { GoogleStrategy } from './google.strategy';
-import { EmailService } from './email.service';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [
@@ -18,13 +17,13 @@ import { EmailService } from './email.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'default_secret_for_development',
+        secret: configService.get<string>('JWT_SECRET') || 'your-secret-jwt-key-change-this-in-production',
         signOptions: { expiresIn: '24h' },
       }),
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, EmailService],
-  exports: [AuthService],
+  providers: [AuthService, JwtStrategy, RolesGuard],
+  exports: [AuthService, RolesGuard],
 })
 export class AuthModule {}

@@ -5,6 +5,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { DonorsModule } from './donors/donors.module';
+import { BloodRequestsModule } from './blood-requests/blood-requests.module';
+import { BloodInventoryModule } from './blood-inventory/blood-inventory.module';
 
 @Module({
   imports: [
@@ -27,6 +30,9 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsersModule,
     AuthModule,
+    DonorsModule,
+    BloodRequestsModule,
+    BloodInventoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

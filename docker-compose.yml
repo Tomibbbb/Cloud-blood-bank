@@ -8,16 +8,15 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/myapp
-      - JWT_SECRET=jwt_secret_for_development
-      - OPENVERSE_CLIENT_ID=${OPENVERSE_CLIENT_ID}
-      - OPENVERSE_CLIENT_SECRET=${OPENVERSE_CLIENT_SECRET}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=your_database_password
+      - DB_NAME=blood_bank
+      - JWT_SECRET=your_super_secret_jwt_key_here
       - FRONTEND_URL=http://localhost:3001
     depends_on:
-      - mongodb
+      - postgres
     volumes:
       - ./backend:/usr/src/app
       - /usr/src/app/node_modules
@@ -37,12 +36,16 @@ services:
     networks:
       - app-network
 
-  mongodb:
-    image: mongo:latest
+  postgres:
+    image: postgres:15
     ports:
-      - "27017:27017"
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=blood_bank
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=your_database_password
     volumes:
-      - mongodb_data:/data/db
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
 
@@ -51,4 +54,4 @@ networks:
     driver: bridge
 
 volumes:
-  mongodb_data:
+  postgres_data:
