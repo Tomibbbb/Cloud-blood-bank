@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    origin: ['http://localhost:3000', 'http://localhost:3006', process.env.FRONTEND_URL].filter(Boolean),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
     allowedHeaders: 'Content-Type,Accept,Authorization',
@@ -20,8 +20,6 @@ async function bootstrap() {
     .setTitle('Blood Bank Management System API')
     .setDescription('API for managing blood donations, inventory, and requests')
     .setVersion('1.0')
-    .addTag('auth', 'Authentication endpoints')
-    .addTag('users', 'User management')
     .addBearerAuth()
     .build();
 

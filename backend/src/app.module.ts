@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { DonorsModule } from './donors/donors.module';
 import { BloodRequestsModule } from './blood-requests/blood-requests.module';
 import { BloodInventoryModule } from './blood-inventory/blood-inventory.module';
+import { HospitalStockModule } from './hospital-stock/hospital-stock.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { BloodInventoryModule } from './blood-inventory/blood-inventory.module';
     DonorsModule,
     BloodRequestsModule,
     BloodInventoryModule,
+    HospitalStockModule,
   ],
   controllers: [AppController],
   providers: [AppService],

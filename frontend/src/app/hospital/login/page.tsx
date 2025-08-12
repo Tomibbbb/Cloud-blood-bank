@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -16,23 +16,55 @@ import {
   Divider,
   IconButton,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Login as LoginIcon } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
+import { 
+  Visibility, 
+  VisibilityOff, 
+  LocalHospital as HospitalIcon 
+} from '@mui/icons-material';
+import { useAuth } from '../../../contexts/AuthContext';
 
-export default function LoginPage() {
+export default function HospitalLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
+
+  // Handle authentication state and redirect logic
+  useEffect(() => {
+    // Check if user is already authenticated
+    if (isAuthenticated && user) {
+      // If authenticated as hospital, go to hospital dashboard
+      if (user.role === 'hospital') {
+        router.push('/hospital/dashboard');
+      } else {
+        // If authenticated with a different role, clear auth to allow hospital login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // Reload the page to reset auth state
+        window.location.reload();
+      }
+    }
+  }, [isAuthenticated, user, router]);
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
       setError('Email and password are required');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
       return;
     }
     
@@ -42,37 +74,35 @@ export default function LoginPage() {
     try {
       await login(email, password);
       
-      // Get user from localStorage to determine redirect
+      // Get user from localStorage to verify role
       const userData = localStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
         
-        // Redirect based on role
-        switch (user.role) {
-          case 'admin':
-            router.push('/admin/dashboard');
-            break;
-          case 'hospital':
-            router.push('/hospital/dashboard');
-            break;
-          case 'donor':
-            router.push('/donor/dashboard');
-            break;
-          default:
-            router.push('/');
+        // Verify user is a hospital
+        if (user.role === 'hospital') {
+          router.push('/hospital/dashboard');
+        } else {
+          // If not a hospital user, show error and logout
+          setError('This login page is for hospital users only. Please use the correct login page for your account type.');
+          // Clear authentication
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          return;
         }
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
+      const errorMessage = err instanceof Error ? err.message : 'Hospital login failed. Please try again.';
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleTogglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  // Don't render if already authenticated (prevents flash)
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <Box
@@ -103,18 +133,18 @@ export default function LoginPage() {
             >
               <Box
                 sx={{
-                  background: 'linear-gradient(135deg, #C62828 0%, #8e0000 100%)',
+                  background: 'linear-gradient(135deg, #1565C0 0%, #003c8f 100%)',
                   color: 'white',
                   py: 4,
                   textAlign: 'center',
                 }}
               >
-                <LoginIcon sx={{ fontSize: 48, mb: 2 }} />
+                <HospitalIcon sx={{ fontSize: 48, mb: 2 }} />
                 <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-                  Welcome Back
+                  Hospital Login
                 </Typography>
                 <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                  Sign in to access your blood bank account
+                  Access your hospital blood bank portal
                 </Typography>
               </Box>
 
@@ -126,7 +156,7 @@ export default function LoginPage() {
                       mb: 3,
                       borderRadius: 2,
                       '& .MuiAlert-icon': {
-                        color: 'primary.main'
+                        color: 'error.main'
                       }
                     }}
                   >
@@ -134,13 +164,13 @@ export default function LoginPage() {
                   </Alert>
                 )}
 
-                <Box component="form" onSubmit={handleSubmit}>
+                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
                   <TextField
                     margin="normal"
                     required
                     fullWidth
                     id="email"
-                    label="Email Address"
+                    label="Hospital Email Address"
                     name="email"
                     type="email"
                     autoComplete="email"
@@ -159,7 +189,7 @@ export default function LoginPage() {
                         },
                         '&.Mui-focused': {
                           transform: 'translateY(-1px)',
-                          boxShadow: '0 4px 12px rgba(198, 40, 40, 0.15)',
+                          boxShadow: '0 4px 12px rgba(21, 101, 192, 0.15)',
                         },
                       },
                     }}
@@ -200,7 +230,7 @@ export default function LoginPage() {
                         },
                         '&.Mui-focused': {
                           transform: 'translateY(-1px)',
-                          boxShadow: '0 4px 12px rgba(198, 40, 40, 0.15)',
+                          boxShadow: '0 4px 12px rgba(21, 101, 192, 0.15)',
                         },
                       },
                     }}
@@ -219,12 +249,12 @@ export default function LoginPage() {
                       fontWeight: 600,
                       borderRadius: 2,
                       textTransform: 'none',
-                      background: 'linear-gradient(135deg, #C62828 0%, #8e0000 100%)',
+                      background: 'linear-gradient(135deg, #1565C0 0%, #003c8f 100%)',
                       transition: 'all 0.2s ease-in-out',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #8e0000 0%, #C62828 100%)',
+                        background: 'linear-gradient(135deg, #003c8f 0%, #1565C0 100%)',
                         transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 20px rgba(198, 40, 40, 0.3)',
+                        boxShadow: '0 8px 20px rgba(21, 101, 192, 0.3)',
                       },
                       '&:disabled': {
                         background: 'rgba(0, 0, 0, 0.12)',
@@ -232,7 +262,7 @@ export default function LoginPage() {
                       },
                     }}
                   >
-                    {isSubmitting ? 'Signing in...' : 'Sign In'}
+                    {isSubmitting ? 'Signing in...' : 'Sign In to Hospital Portal'}
                   </Button>
 
                   <Divider sx={{ my: 2 }}>
@@ -243,11 +273,11 @@ export default function LoginPage() {
 
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Don&apos;t have an account?
+                      Don&apos;t have a hospital account?
                     </Typography>
                     <Button
                       component={Link}
-                      href="/register"
+                      href="/hospital/signup"
                       variant="outlined"
                       color="secondary"
                       fullWidth
@@ -263,8 +293,29 @@ export default function LoginPage() {
                         },
                       }}
                     >
-                      Create New Account
+                      Register Hospital Account
                     </Button>
+                  </Box>
+
+                  <Box sx={{ textAlign: 'center', mt: 3 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Are you a donor or NHS Blood Manager?{' '}
+                      <Typography
+                        component={Link}
+                        href="/login"
+                        variant="body2"
+                        color="primary"
+                        sx={{ 
+                          textDecoration: 'none',
+                          fontWeight: 500,
+                          '&:hover': {
+                            textDecoration: 'underline'
+                          }
+                        }}
+                      >
+                        Use General Login
+                      </Typography>
+                    </Typography>
                   </Box>
                 </Box>
               </CardContent>

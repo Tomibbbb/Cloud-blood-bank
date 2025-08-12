@@ -23,10 +23,8 @@ export class SeedService {
   async seed() {
     console.log('🌱 Starting database seeding...');
 
-    // Clear existing data
     await this.clearDatabase();
 
-    // Seed data
     const users = await this.seedUsers();
     const donors = await this.seedDonors(users);
     await this.seedBloodInventory();
@@ -47,7 +45,6 @@ export class SeedService {
     await queryRunner.connect();
     
     try {
-      // Use TRUNCATE CASCADE to handle foreign key constraints
       await queryRunner.query('TRUNCATE TABLE "blood_requests" RESTART IDENTITY CASCADE;');
       await queryRunner.query('TRUNCATE TABLE "blood_inventory" RESTART IDENTITY CASCADE;');
       await queryRunner.query('TRUNCATE TABLE "donors" RESTART IDENTITY CASCADE;');
@@ -61,10 +58,9 @@ export class SeedService {
   private async seedUsers(): Promise<User[]> {
     console.log('👥 Seeding users...');
     
-    const hashedPassword = await bcrypt.hash('password123', 12);
+    const hashedPassword = await bcrypt.hash(process.env.DEFAULT_SEED_PASSWORD || 'defaultpass', 12);
     
     const usersData = [
-      // Admin
       {
         firstName: 'System',
         lastName: 'Administrator',
@@ -75,7 +71,6 @@ export class SeedService {
         bloodType: 'O+',
         address: 'Blood Bank HQ, Medical District'
       },
-      // Hospitals
       {
         firstName: 'City General',
         lastName: 'Hospital',
@@ -94,7 +89,6 @@ export class SeedService {
         phone: '+1-555-0200',
         address: '456 Healthcare Ave, Uptown'
       },
-      // Donors
       {
         firstName: 'John',
         lastName: 'Smith',
@@ -242,7 +236,6 @@ export class SeedService {
     console.log('🏥 Seeding blood inventory...');
     
     const inventoryData = [
-      // Main Hospital inventory
       { bloodGroup: BloodGroup.A_POSITIVE, unitsAvailable: 25, location: 'City General Hospital', expiryDate: new Date('2025-09-15') },
       { bloodGroup: BloodGroup.A_NEGATIVE, unitsAvailable: 12, location: 'City General Hospital', expiryDate: new Date('2025-09-20') },
       { bloodGroup: BloodGroup.B_POSITIVE, unitsAvailable: 18, location: 'City General Hospital', expiryDate: new Date('2025-09-10') },

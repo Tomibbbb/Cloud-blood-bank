@@ -26,7 +26,6 @@ export class BloodRequestsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.HOSPITAL)
   async getAllRequests(@Request() req) {
-    // If hospital user, only show their requests
     if (req.user.role === UserRole.HOSPITAL) {
       const requests = await this.bloodRequestsService.getRequestsByHospital(req.user.userId);
       return {
@@ -35,7 +34,6 @@ export class BloodRequestsController {
       };
     }
     
-    // If admin, show all requests
     const requests = await this.bloodRequestsService.getAllRequests();
     return {
       message: 'All blood requests retrieved successfully',

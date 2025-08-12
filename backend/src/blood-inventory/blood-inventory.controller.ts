@@ -13,7 +13,6 @@ import { BloodGroup } from './entities/blood-inventory.entity';
 export class BloodInventoryController {
   constructor(private readonly inventoryService: BloodInventoryService) {}
 
-  // Admin only - Create new inventory record
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -25,7 +24,6 @@ export class BloodInventoryController {
     };
   }
 
-  // All authenticated users can view inventory
   @Get()
   @UseGuards(JwtAuthGuard)
   async getAllInventory() {
@@ -36,7 +34,6 @@ export class BloodInventoryController {
     };
   }
 
-  // All authenticated users can view inventory summary
   @Get('summary')
   @UseGuards(JwtAuthGuard)
   async getInventorySummary() {
@@ -47,7 +44,6 @@ export class BloodInventoryController {
     };
   }
 
-  // All authenticated users can view inventory by blood group
   @Get('blood-group/:bloodGroup')
   @UseGuards(JwtAuthGuard)
   async getInventoryByBloodGroup(@Param('bloodGroup') bloodGroup: BloodGroup) {
@@ -58,7 +54,6 @@ export class BloodInventoryController {
     };
   }
 
-  // All authenticated users can view inventory by location
   @Get('location')
   @UseGuards(JwtAuthGuard)
   async getInventoryByLocation(@Query('location') location: string) {
@@ -69,7 +64,6 @@ export class BloodInventoryController {
     };
   }
 
-  // Admin only - Update stock levels by blood type
   @Patch('stock')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -81,7 +75,6 @@ export class BloodInventoryController {
     };
   }
 
-  // Admin only - Update inventory (specific route as requested)
   @Patch('update')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -93,7 +86,6 @@ export class BloodInventoryController {
     };
   }
 
-  // Admin only - Update specific inventory record
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -108,7 +100,6 @@ export class BloodInventoryController {
     };
   }
 
-  // Admin only - Delete inventory record
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

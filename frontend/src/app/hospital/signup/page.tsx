@@ -16,23 +16,70 @@ import {
   Divider,
   IconButton,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Login as LoginIcon } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
+import {
+  Visibility,
+  VisibilityOff,
+  LocalHospital,
+} from '@mui/icons-material';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useEffect } from 'react';
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+interface HospitalSignupData {
+  hospitalName: string;
+  email: string;
+  password: string;
+  contactNumber: string;
+}
+
+export default function HospitalSignupPage() {
+  const [formData, setFormData] = useState<HospitalSignupData>({
+    hospitalName: '',
+    email: '',
+    password: '',
+    contactNumber: '',
+  });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const { register, isAuthenticated } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/hospital/dashboard');
+    }
+  }, [isAuthenticated, router]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      setError('Email and password are required');
+    if (!formData.hospitalName || !formData.email || !formData.password || !formData.contactNumber) {
+      setError('All fields are required');
+      return;
+    }
+    
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
       return;
     }
     
@@ -40,39 +87,34 @@ export default function LoginPage() {
     setError('');
     
     try {
-      await login(email, password);
+      // Prepare hospital registration data
+      const hospitalData = {
+        firstName: formData.hospitalName, // Using hospitalName as firstName for backend compatibility
+        lastName: 'Hospital', // Default lastName for hospitals
+        email: formData.email,
+        password: formData.password,
+        phone: formData.contactNumber,
+        role: 'hospital',
+        address: '', // Optional field
+      };
+
+      await register(hospitalData);
       
-      // Get user from localStorage to determine redirect
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        
-        // Redirect based on role
-        switch (user.role) {
-          case 'admin':
-            router.push('/admin/dashboard');
-            break;
-          case 'hospital':
-            router.push('/hospital/dashboard');
-            break;
-          case 'donor':
-            router.push('/donor/dashboard');
-            break;
-          default:
-            router.push('/');
-        }
-      }
+      // Redirect to hospital dashboard after successful registration
+      router.push('/hospital/dashboard');
+      
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
+      const errorMessage = err instanceof Error ? err.message : 'Hospital registration failed. Please try again.';
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleTogglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  // Don't render if already authenticated (prevents flash)
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <Box
@@ -103,18 +145,18 @@ export default function LoginPage() {
             >
               <Box
                 sx={{
-                  background: 'linear-gradient(135deg, #C62828 0%, #8e0000 100%)',
+                  background: 'linear-gradient(135deg, #1565C0 0%, #003c8f 100%)',
                   color: 'white',
                   py: 4,
                   textAlign: 'center',
                 }}
               >
-                <LoginIcon sx={{ fontSize: 48, mb: 2 }} />
+                <LocalHospital sx={{ fontSize: 48, mb: 2 }} />
                 <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-                  Welcome Back
+                  Hospital Registration
                 </Typography>
                 <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                  Sign in to access your blood bank account
+                  Join our blood bank network today
                 </Typography>
               </Box>
 
@@ -126,7 +168,7 @@ export default function LoginPage() {
                       mb: 3,
                       borderRadius: 2,
                       '& .MuiAlert-icon': {
-                        color: 'primary.main'
+                        color: 'error.main'
                       }
                     }}
                   >
@@ -139,14 +181,13 @@ export default function LoginPage() {
                     margin="normal"
                     required
                     fullWidth
-                    id="email"
-                    label="Email Address"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
+                    id="hospitalName"
+                    label="Hospital Name"
+                    name="hospitalName"
+                    autoComplete="organization"
                     autoFocus
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.hospitalName}
+                    onChange={handleChange}
                     disabled={isSubmitting}
                     variant="outlined"
                     sx={{
@@ -159,7 +200,65 @@ export default function LoginPage() {
                         },
                         '&.Mui-focused': {
                           transform: 'translateY(-1px)',
-                          boxShadow: '0 4px 12px rgba(198, 40, 40, 0.15)',
+                          boxShadow: '0 4px 12px rgba(21, 101, 192, 0.15)',
+                        },
+                      },
+                    }}
+                  />
+
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="email"
+                    label="Email Address"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                    variant="outlined"
+                    sx={{
+                      mb: 2,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          transform: 'translateY(-1px)',
+                        },
+                        '&.Mui-focused': {
+                          transform: 'translateY(-1px)',
+                          boxShadow: '0 4px 12px rgba(21, 101, 192, 0.15)',
+                        },
+                      },
+                    }}
+                  />
+
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="contactNumber"
+                    label="Contact Number"
+                    name="contactNumber"
+                    type="tel"
+                    autoComplete="tel"
+                    value={formData.contactNumber}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                    variant="outlined"
+                    sx={{
+                      mb: 2,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          transform: 'translateY(-1px)',
+                        },
+                        '&.Mui-focused': {
+                          transform: 'translateY(-1px)',
+                          boxShadow: '0 4px 12px rgba(21, 101, 192, 0.15)',
                         },
                       },
                     }}
@@ -173,11 +272,12 @@ export default function LoginPage() {
                     label="Password"
                     type={showPassword ? 'text' : 'password'}
                     id="password"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                    value={formData.password}
+                    onChange={handleChange}
                     disabled={isSubmitting}
                     variant="outlined"
+                    helperText="Password must be at least 6 characters"
                     InputProps={{
                       endAdornment: (
                         <IconButton
@@ -200,7 +300,7 @@ export default function LoginPage() {
                         },
                         '&.Mui-focused': {
                           transform: 'translateY(-1px)',
-                          boxShadow: '0 4px 12px rgba(198, 40, 40, 0.15)',
+                          boxShadow: '0 4px 12px rgba(21, 101, 192, 0.15)',
                         },
                       },
                     }}
@@ -219,12 +319,12 @@ export default function LoginPage() {
                       fontWeight: 600,
                       borderRadius: 2,
                       textTransform: 'none',
-                      background: 'linear-gradient(135deg, #C62828 0%, #8e0000 100%)',
+                      background: 'linear-gradient(135deg, #1565C0 0%, #003c8f 100%)',
                       transition: 'all 0.2s ease-in-out',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #8e0000 0%, #C62828 100%)',
+                        background: 'linear-gradient(135deg, #003c8f 0%, #1565C0 100%)',
                         transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 20px rgba(198, 40, 40, 0.3)',
+                        boxShadow: '0 8px 20px rgba(21, 101, 192, 0.3)',
                       },
                       '&:disabled': {
                         background: 'rgba(0, 0, 0, 0.12)',
@@ -232,7 +332,7 @@ export default function LoginPage() {
                       },
                     }}
                   >
-                    {isSubmitting ? 'Signing in...' : 'Sign In'}
+                    {isSubmitting ? 'Creating Hospital Account...' : 'Create Hospital Account'}
                   </Button>
 
                   <Divider sx={{ my: 2 }}>
@@ -243,11 +343,11 @@ export default function LoginPage() {
 
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Don&apos;t have an account?
+                      Already have a hospital account?
                     </Typography>
                     <Button
                       component={Link}
-                      href="/register"
+                      href="/hospital/login"
                       variant="outlined"
                       color="secondary"
                       fullWidth
@@ -263,7 +363,7 @@ export default function LoginPage() {
                         },
                       }}
                     >
-                      Create New Account
+                      Sign In to Hospital Account
                     </Button>
                   </Box>
                 </Box>
