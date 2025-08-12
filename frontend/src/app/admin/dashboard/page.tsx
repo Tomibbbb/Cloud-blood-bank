@@ -1,272 +1,366 @@
 'use client';
 
-import ProtectedRoute from '../../../components/ProtectedRoute';
 import { useState } from 'react';
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  Grid,
+  Card,
+  CardContent,
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  IconButton,
+  Avatar,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+import {
+  Refresh as RefreshIcon,
+  LocalHospital as HospitalIcon,
+  PendingActions as PendingIcon,
+  Inventory as InventoryIcon,
+  Warning as WarningIcon,
+  CheckCircle as CheckIcon,
+  Cancel as CancelIcon,
+} from '@mui/icons-material';
+import ProtectedRoute from '../../../components/ProtectedRoute';
 
-export default function NHSBloodManagerDashboardPage() {
-  const [requests, setRequests] = useState([
+const KPICard = ({ title, value, icon, color = 'primary' }: {
+  title: string;
+  value: number | string;
+  icon: React.ReactNode;
+  color?: 'primary' | 'secondary' | 'warning' | 'error';
+}) => (
+  <Card elevation={3}>
+    <CardContent>
+      <Box display="flex" alignItems="center" gap={2}>
+        <Avatar sx={{ bgcolor: `${color}.main` }}>
+          {icon}
+        </Avatar>
+        <Box>
+          <Typography variant="h4" component="div" fontWeight="bold">
+            {value}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {title}
+          </Typography>
+        </Box>
+      </Box>
+    </CardContent>
+  </Card>
+);
+
+interface BloodRequest {
+  id: number;
+  hospitalName: string;
+  patientName: string;
+  bloodType: string;
+  quantity: number;
+  urgency: 'critical' | 'high' | 'medium' | 'low';
+  status: 'pending' | 'approved' | 'rejected' | 'fulfilled';
+  requestedAt: string;
+}
+
+interface InventoryItem {
+  bloodType: string;
+  totalUnits: number;
+  lowStock: boolean;
+  expiringSoon: number;
+}
+
+export default function NHSBloodCoordinatorDashboard() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  // TODO: Replace with actual API calls
+  const [requests, setRequests] = useState<BloodRequest[]>([
     {
       id: 1,
-      hospitalName: 'City General Hospital',
-      bloodType: 'A+',
-      quantity: 3,
-      urgency: 'high',
+      hospitalName: 'Royal London Hospital',
+      patientName: 'Patient A',
+      bloodType: 'O-',
+      quantity: 4,
+      urgency: 'critical',
       status: 'pending',
-      patientName: 'John Doe',
-      reason: 'Emergency surgery',
-      requestedAt: '2024-01-15T10:00:00Z',
+      requestedAt: '2025-08-12T08:30:00Z',
     },
     {
       id: 2,
-      hospitalName: 'Metro Medical Center',
-      bloodType: 'O-',
+      hospitalName: 'St. Bartholomew\'s Hospital',
+      patientName: 'Patient B',
+      bloodType: 'A+',
       quantity: 2,
-      urgency: 'critical',
+      urgency: 'high',
+      status: 'pending',
+      requestedAt: '2025-08-12T09:15:00Z',
+    },
+    {
+      id: 3,
+      hospitalName: 'Guy\'s Hospital',
+      patientName: 'Patient C',
+      bloodType: 'B+',
+      quantity: 3,
+      urgency: 'medium',
       status: 'approved',
-      patientName: 'Jane Smith',
-      reason: 'Accident victim',
-      requestedAt: '2024-01-14T15:30:00Z',
+      requestedAt: '2025-08-12T07:45:00Z',
     },
   ]);
 
-  const [inventory, setInventory] = useState([
-    { bloodType: 'A+', units: 45, location: 'Main Storage', expiry: '2024-02-15' },
-    { bloodType: 'A-', units: 23, location: 'Main Storage', expiry: '2024-02-10' },
-    { bloodType: 'B+', units: 31, location: 'Main Storage', expiry: '2024-02-20' },
-    { bloodType: 'B-', units: 12, location: 'Main Storage', expiry: '2024-02-08' },
-    { bloodType: 'AB+', units: 8, location: 'Main Storage', expiry: '2024-02-12' },
-    { bloodType: 'AB-', units: 5, location: 'Main Storage', expiry: '2024-02-18' },
-    { bloodType: 'O+', units: 67, location: 'Main Storage', expiry: '2024-02-25' },
-    { bloodType: 'O-', units: 19, location: 'Main Storage', expiry: '2024-02-14' },
+  // TODO: Replace with actual API calls
+  const [inventory] = useState<InventoryItem[]>([
+    { bloodType: 'A+', totalUnits: 45, lowStock: false, expiringSoon: 2 },
+    { bloodType: 'A-', totalUnits: 8, lowStock: true, expiringSoon: 1 },
+    { bloodType: 'B+', totalUnits: 32, lowStock: false, expiringSoon: 0 },
+    { bloodType: 'B-', totalUnits: 12, lowStock: false, expiringSoon: 3 },
+    { bloodType: 'AB+', totalUnits: 6, lowStock: true, expiringSoon: 1 },
+    { bloodType: 'AB-', totalUnits: 4, lowStock: true, expiringSoon: 0 },
+    { bloodType: 'O+', totalUnits: 67, lowStock: false, expiringSoon: 4 },
+    { bloodType: 'O-', totalUnits: 19, lowStock: false, expiringSoon: 2 },
   ]);
 
-  const updateRequestStatus = (id: number, newStatus: string) => {
+  const pendingRequests = requests.filter(r => r.status === 'pending');
+  const totalUnits = inventory.reduce((sum, item) => sum + item.totalUnits, 0);
+  const lowStockCount = inventory.filter(item => item.lowStock).length;
+  const criticalItems = inventory.filter(item => item.lowStock || item.expiringSoon > 0);
+
+  const handleRefresh = () => {
+    // TODO: Implement refresh logic to fetch latest data
+    console.log('Refreshing dashboard data...');
+  };
+
+  const updateRequestStatus = (id: number, newStatus: 'approved' | 'rejected') => {
     setRequests(requests.map(request => 
       request.id === id ? { ...request, status: newStatus } : request
     ));
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'fulfilled': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getUrgencyColor = (urgency: string) => {
+  const getUrgencyColor = (urgency: string): 'error' | 'warning' | 'info' | 'success' => {
     switch (urgency) {
-      case 'critical': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'critical': return 'error';
+      case 'high': return 'warning';
+      case 'medium': return 'info';
+      case 'low': return 'success';
+      default: return 'info';
     }
   };
 
-  const getInventoryStatus = (units: number) => {
-    if (units < 10) return 'bg-red-100 text-red-800';
-    if (units < 20) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-green-100 text-green-800';
+  const getStatusColor = (status: string): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
+    switch (status) {
+      case 'pending': return 'warning';
+      case 'approved': return 'success';
+      case 'rejected': return 'error';
+      case 'fulfilled': return 'primary';
+      default: return 'default';
+    }
   };
 
   return (
     <ProtectedRoute requiredRole="admin">
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">NHS Blood Manager Dashboard</h1>
+      <Box sx={{ bgcolor: '#F8F9FA', minHeight: '100vh', py: 3 }}>
+        <Container maxWidth="xl">
+          {/* Header */}
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+            <Box>
+              <Typography variant="h3" component="h1" fontWeight="bold" color="primary.main">
+                NHS Blood Coordinator Dashboard
+              </Typography>
+              <Typography variant="subtitle1" color="text.secondary">
+                Managing blood supply across the NHS network
+              </Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleRefresh}
+              size="large"
+            >
+              Refresh
+            </Button>
+          </Box>
 
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">R</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Total Requests</dt>
-                      <dd className="text-lg font-medium text-gray-900">{requests.length}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Alert Banner */}
+          {criticalItems.length > 0 && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              <strong>Critical Alert:</strong> {lowStockCount} blood types have low stock and {criticalItems.reduce((sum, item) => sum + item.expiringSoon, 0)} units are expiring soon. Immediate action required.
+            </Alert>
+          )}
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">P</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Pending</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {requests.filter(r => r.status === 'pending').length}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* KPI Cards */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <KPICard
+                title="Total Requests"
+                value={requests.length}
+                icon={<HospitalIcon />}
+                color="primary"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <KPICard
+                title="Pending Requests"
+                value={pendingRequests.length}
+                icon={<PendingIcon />}
+                color="warning"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <KPICard
+                title="Total Units in Network"
+                value={totalUnits}
+                icon={<InventoryIcon />}
+                color="secondary"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <KPICard
+                title="Low Stock Alerts"
+                value={lowStockCount}
+                icon={<WarningIcon />}
+                color="error"
+              />
+            </Grid>
+          </Grid>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">I</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Total Units</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {inventory.reduce((sum, item) => sum + item.units, 0)}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Main Content Grid */}
+          <Grid container spacing={3}>
+            {/* Blood Requests Table */}
+            <Grid item xs={12} lg={8}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5" component="h2" gutterBottom>
+                    Blood Requests
+                  </Typography>
+                  <TableContainer component={Paper} elevation={0}>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell><strong>Hospital</strong></TableCell>
+                          <TableCell><strong>Patient</strong></TableCell>
+                          <TableCell><strong>Blood Type</strong></TableCell>
+                          <TableCell><strong>Quantity</strong></TableCell>
+                          <TableCell><strong>Urgency</strong></TableCell>
+                          <TableCell><strong>Status</strong></TableCell>
+                          <TableCell><strong>Actions</strong></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {requests.map((request) => (
+                          <TableRow key={request.id} hover>
+                            <TableCell>{request.hospitalName}</TableCell>
+                            <TableCell>{request.patientName}</TableCell>
+                            <TableCell>
+                              <Chip label={request.bloodType} variant="outlined" />
+                            </TableCell>
+                            <TableCell>{request.quantity} units</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={request.urgency}
+                                color={getUrgencyColor(request.urgency)}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={request.status}
+                                color={getStatusColor(request.status)}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              {request.status === 'pending' && (
+                                <Box display="flex" gap={1}>
+                                  <IconButton
+                                    color="success"
+                                    onClick={() => updateRequestStatus(request.id, 'approved')}
+                                    size="small"
+                                  >
+                                    <CheckIcon />
+                                  </IconButton>
+                                  <IconButton
+                                    color="error"
+                                    onClick={() => updateRequestStatus(request.id, 'rejected')}
+                                    size="small"
+                                  >
+                                    <CancelIcon />
+                                  </IconButton>
+                                </Box>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">L</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Low Stock</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {inventory.filter(item => item.units < 10).length}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          
-          <div className="bg-white shadow rounded-lg mb-8">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Blood Requests</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Hospital
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Patient
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Blood Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quantity
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Urgency
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {requests.map((request) => (
-                    <tr key={request.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{request.hospitalName}</div>
-                        <div className="text-sm text-gray-500">{request.reason}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {request.patientName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {request.bloodType}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {request.quantity} units
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getUrgencyColor(request.urgency)}`}>
-                          {request.urgency}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(request.status)}`}>
-                          {request.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {request.status === 'pending' && (
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => updateRequestStatus(request.id, 'approved')}
-                              className="text-green-600 hover:text-green-900"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => updateRequestStatus(request.id, 'rejected')}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Blood Inventory</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6">
-              {inventory.map((item) => (
-                <div key={item.bloodType} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">{item.bloodType}</h3>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getInventoryStatus(item.units)}`}>
-                      {item.units < 10 ? 'Low' : item.units < 20 ? 'Medium' : 'Good'}
-                    </span>
-                  </div>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <p><strong>{item.units}</strong> units available</p>
-                    <p>Location: {item.location}</p>
-                    <p>Expires: {new Date(item.expiry).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+            {/* Network Inventory Table */}
+            <Grid item xs={12} lg={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5" component="h2" gutterBottom>
+                    Network Inventory
+                  </Typography>
+                  <TableContainer component={Paper} elevation={0}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell><strong>Blood Type</strong></TableCell>
+                          <TableCell><strong>Total Units</strong></TableCell>
+                          <TableCell><strong>Status</strong></TableCell>
+                          <TableCell><strong>Expiring</strong></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {inventory.map((item) => (
+                          <TableRow key={item.bloodType} hover>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight="bold">
+                                {item.bloodType}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>{item.totalUnits}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={item.lowStock ? 'Low' : 'Good'}
+                                color={item.lowStock ? 'error' : 'success'}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              {item.expiringSoon > 0 ? (
+                                <Chip
+                                  label={`${item.expiringSoon} units`}
+                                  color="warning"
+                                  size="small"
+                                />
+                              ) : (
+                                <Typography variant="body2" color="text.secondary">
+                                  None
+                                </Typography>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
     </ProtectedRoute>
   );
 }
