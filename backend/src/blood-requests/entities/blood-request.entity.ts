@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Donor } from '../../donors/entities/donor.entity';
 import { BloodGroup } from '../../blood-inventory/entities/blood-inventory.entity';
 
 export enum RequestStatus {
@@ -65,6 +66,20 @@ export class BloodRequest {
 
   @Column()
   requestedById: number;
+
+  @ManyToOne(() => Donor, { nullable: true })
+  @JoinColumn({ name: 'requesterDonorId' })
+  requesterDonor?: Donor;
+
+  @Column({ nullable: true })
+  requesterDonorId?: number;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'hospitalId' })
+  hospital?: User;
+
+  @Column({ nullable: true })
+  hospitalId?: number;
 
   @CreateDateColumn()
   createdAt: Date;

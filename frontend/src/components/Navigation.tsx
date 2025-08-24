@@ -71,7 +71,8 @@ export default function Navigation() {
         return [
           { href: '/donor/dashboard', label: 'Dashboard', icon: <Dashboard /> },
           { href: '/donor/profile', label: 'My Profile', icon: <AccountCircle /> },
-          { href: '/donor/donations', label: 'My Donations', icon: <Bloodtype /> },
+          { href: '/donor/request-blood', label: 'Request Blood', icon: <Bloodtype /> },
+          { href: '/donor/donations', label: 'My Donations', icon: <LocalHospital /> },
         ];
       default:
         return [];

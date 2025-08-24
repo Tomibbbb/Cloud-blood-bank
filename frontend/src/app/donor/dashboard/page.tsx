@@ -368,6 +368,8 @@ export default function DonorDashboard() {
                       Update Profile
                     </Button>
                     <Button
+                      component={Link}
+                      href="/donor/donate"
                       variant="contained"
                       startIcon={<Schedule />}
                       fullWidth

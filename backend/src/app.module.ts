@@ -9,6 +9,8 @@ import { DonorsModule } from './donors/donors.module';
 import { BloodRequestsModule } from './blood-requests/blood-requests.module';
 import { BloodInventoryModule } from './blood-inventory/blood-inventory.module';
 import { HospitalStockModule } from './hospital-stock/hospital-stock.module';
+import { DonationOffersModule } from './donations/donation-offers.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -20,13 +22,13 @@ import { HospitalStockModule } from './hospital-stock/hospital-stock.module';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('DB_HOST', 'localhost'),
-        port: configService.get<number>('DB_PORT', 5432),
-        username: configService.get<string>('DB_USERNAME', 'postgres'),
-        password: configService.get<string>('DB_PASSWORD', 'password'),
-        database: configService.get<string>('DB_NAME', 'blood_bank'),
+        url: configService.get<string>('DATABASE_URL'),
+        ssl: {
+          rejectUnauthorized: false,
+        },
         autoLoadEntities: true,
-        synchronize: configService.get<string>('NODE_ENV') !== 'production',
+        synchronize: true, // Temporarily enabled to create schema
+        logging: process.env.NODE_ENV === 'development',
       }),
     }),
     UsersModule,
@@ -35,6 +37,8 @@ import { HospitalStockModule } from './hospital-stock/hospital-stock.module';
     BloodRequestsModule,
     BloodInventoryModule,
     HospitalStockModule,
+    DonationOffersModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

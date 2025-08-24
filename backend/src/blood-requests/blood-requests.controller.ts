@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, UseGuards, Request, Param, Patch } from '@nestjs/common';
 import { BloodRequestsService } from './blood-requests.service';
 import { CreateBloodRequestDto } from './dto/create-blood-request.dto';
+import { CreateDonorBloodRequestDto } from './dto/create-donor-blood-request.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -51,6 +52,17 @@ export class BloodRequestsController {
     const request = await this.bloodRequestsService.updateRequestStatus(id, status);
     return {
       message: 'Request status updated successfully',
+      request
+    };
+  }
+
+  @Post('donor/request-blood')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.DONOR)
+  async createDonorBloodRequest(@Body() createDonorBloodRequestDto: CreateDonorBloodRequestDto, @Request() req) {
+    const request = await this.bloodRequestsService.createDonorBloodRequest(createDonorBloodRequestDto, req.user.userId);
+    return {
+      message: 'Blood request created successfully',
       request
     };
   }

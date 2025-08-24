@@ -61,8 +61,12 @@ export default function DonorProfilePage() {
       
       setIsLoading(true);
       try {
-        // Check if there's saved profile data in localStorage
-        const savedProfile = localStorage.getItem('donorProfile');
+        // Clean up any old shared profile data (security fix)
+        localStorage.removeItem('donorProfile');
+        
+        // Check if there's saved profile data in localStorage using user-specific key
+        const userProfileKey = `donorProfile_${user.id}`;
+        const savedProfile = localStorage.getItem(userProfileKey);
         let profileData: DonorProfile | null = null;
         
         if (savedProfile) {
@@ -149,7 +153,9 @@ export default function DonorProfilePage() {
         updatedAt: new Date().toISOString(),
       };
       
-      localStorage.setItem('donorProfile', JSON.stringify(profileToSave));
+      // Save profile data to localStorage using user-specific key
+      const userProfileKey = `donorProfile_${user?.id}`;
+      localStorage.setItem(userProfileKey, JSON.stringify(profileToSave));
       
       // Update existing profile state
       if (!existingProfile) {
