@@ -74,7 +74,6 @@ export const useCreateOffer = () => {
       // return response.data.offer;
 
       // Mock implementation
-      console.log('Creating offer:', data);
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const mockOffer: DonationOffer = {
@@ -190,7 +189,6 @@ export const useConfirmOffer = () => {
       // return response.data.offer;
 
       // Mock implementation
-      console.log('Confirming offer:', offerId, data);
       await new Promise(resolve => setTimeout(resolve, 500));
       
       return null; // Should return updated offer
@@ -220,7 +218,6 @@ export const useRejectOffer = () => {
       // return response.data.offer;
 
       // Mock implementation
-      console.log('Rejecting offer:', offerId, data);
       await new Promise(resolve => setTimeout(resolve, 500));
       
       return null; // Should return updated offer

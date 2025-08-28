@@ -1,4 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { BloodGroup } from '../../blood-inventory/entities/blood-inventory.entity';
 
@@ -6,7 +14,7 @@ export enum DonationStatus {
   SCHEDULED = 'scheduled',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
-  NO_SHOW = 'no_show'
+  NO_SHOW = 'no_show',
 }
 
 @Entity('donations')
@@ -26,7 +34,7 @@ export class Donation {
   @Column({
     type: 'enum',
     enum: DonationStatus,
-    default: DonationStatus.SCHEDULED
+    default: DonationStatus.SCHEDULED,
   })
   status: DonationStatus;
 

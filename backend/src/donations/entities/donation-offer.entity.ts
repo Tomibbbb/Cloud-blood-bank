@@ -1,11 +1,19 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum DonationOfferStatus {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
   REJECTED = 'rejected',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 @Entity('donation_offers')
@@ -13,12 +21,12 @@ export class DonationOffer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  donorId: number;
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'donorId' })
   donor: User;
+
+  @Column()
+  donorId: number;
 
   @Column()
   bloodType: string;
@@ -35,7 +43,7 @@ export class DonationOffer {
   @Column({
     type: 'enum',
     enum: DonationOfferStatus,
-    default: DonationOfferStatus.PENDING
+    default: DonationOfferStatus.PENDING,
   })
   status: DonationOfferStatus;
 

@@ -6,8 +6,8 @@ import { SeedModule } from './seed.module';
 import { SeedService } from './seed.service';
 
 async function bootstrap() {
-  console.log('🚀 Initializing database seeding...');
   
+
   const app = await NestFactory.create(
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule.forRoot({ isGlobal: true }), SeedModule],
@@ -21,14 +21,14 @@ async function bootstrap() {
         autoLoadEntities: true,
         synchronize: true, // Enable for seeding to create tables if needed
       }),
-    })
+    }),
   );
 
   const seedService = app.get(SeedService);
-  
+
   try {
     await seedService.seed();
-    console.log('🎉 Seeding completed successfully!');
+    
   } catch (error) {
     console.error('❌ Seeding failed:', error);
     process.exit(1);

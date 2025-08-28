@@ -1,7 +1,15 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
-import { DonationOffer, DonationOfferStatus } from './entities/donation-offer.entity';
+import {
+  DonationOffer,
+  DonationOfferStatus,
+} from './entities/donation-offer.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateDonationOfferDto } from './dto/create-donation-offer.dto';
 import { ConfirmDonationOfferDto } from './dto/confirm-donation-offer.dto';
@@ -19,24 +27,30 @@ export class DonationOffersService {
     private routingService: OfferRoutingService,
   ) {}
 
-  async createOffer(userId: number, createOfferDto: CreateDonationOfferDto): Promise<DonationOffer> {
+  async createOffer(
+    userId: number,
+    createOfferDto: CreateDonationOfferDto,
+  ): Promise<DonationOffer> {
     const donor = await this.userRepository.findOne({ where: { id: userId } });
     if (!donor) {
       throw new NotFoundException('Donor not found');
     }
 
-    const routing = await this.routingService.routeOffer(
-      createOfferDto.location,
-      createOfferDto.bloodType
-    );
-
-    const offer = this.offerRepository.create({
-      ...createOfferDto,
-      donorId: userId,
-      preferredDate: new Date(createOfferDto.preferredDate),
-      routedToId: routing?.hospitalId,
-      routedToName: routing?.hospitalName,
+    const offer = new DonationOffer();
+    offer.donorId = userId;
+    offer.bloodType = createOfferDto.bloodType;
+    offer.preferredDate = new Date(createOfferDto.preferredDate);
+    offer.location = createOfferDto.location;
+    offer.notes = createOfferDto.notes;
+    offer.status = DonationOfferStatus.PENDING;
+    const hospitals = await this.userRepository.find({
+      where: { role: 'hospital' as any },
     });
+
+    if (hospitals.length > 0) {
+      offer.routedToId = hospitals[0].id;
+      offer.routedToName = hospitals[0].firstName + ' ' + hospitals[0].lastName;
+    }
 
     return this.offerRepository.save(offer);
   }
@@ -48,7 +62,10 @@ export class DonationOffersService {
     });
   }
 
-  async getHospitalOffers(hospitalId: number, query: DonationOfferQueryDto): Promise<DonationOffer[]> {
+  async getHospitalOffers(
+    hospitalId: number,
+    query: DonationOfferQueryDto,
+  ): Promise<DonationOffer[]> {
     const where: any = { routedToId: hospitalId };
 
     if (query.status) {
@@ -60,7 +77,10 @@ export class DonationOffersService {
     }
 
     if (query.startDate && query.endDate) {
-      where.preferredDate = Between(new Date(query.startDate), new Date(query.endDate));
+      where.preferredDate = Between(
+        new Date(query.startDate),
+        new Date(query.endDate),
+      );
     }
 
     return this.offerRepository.find({
@@ -82,7 +102,10 @@ export class DonationOffersService {
     }
 
     if (query.startDate && query.endDate) {
-      where.preferredDate = Between(new Date(query.startDate), new Date(query.endDate));
+      where.preferredDate = Between(
+        new Date(query.startDate),
+        new Date(query.endDate),
+      );
     }
 
     if (query.hospitalId) {
@@ -99,7 +122,7 @@ export class DonationOffersService {
   async confirmOffer(
     offerId: number,
     hospitalId: number,
-    confirmDto: ConfirmDonationOfferDto
+    confirmDto: ConfirmDonationOfferDto,
   ): Promise<DonationOffer> {
     const offer = await this.offerRepository.findOne({
       where: { id: offerId, routedToId: hospitalId },
@@ -123,7 +146,7 @@ export class DonationOffersService {
   async rejectOffer(
     offerId: number,
     hospitalId: number,
-    rejectDto: RejectDonationOfferDto
+    rejectDto: RejectDonationOfferDto,
   ): Promise<DonationOffer> {
     const offer = await this.offerRepository.findOne({
       where: { id: offerId, routedToId: hospitalId },
@@ -168,9 +191,15 @@ export class DonationOffersService {
   }> {
     const [total, pending, confirmed, rejected] = await Promise.all([
       this.offerRepository.count(),
-      this.offerRepository.count({ where: { status: DonationOfferStatus.PENDING } }),
-      this.offerRepository.count({ where: { status: DonationOfferStatus.CONFIRMED } }),
-      this.offerRepository.count({ where: { status: DonationOfferStatus.REJECTED } }),
+      this.offerRepository.count({
+        where: { status: DonationOfferStatus.PENDING },
+      }),
+      this.offerRepository.count({
+        where: { status: DonationOfferStatus.CONFIRMED },
+      }),
+      this.offerRepository.count({
+        where: { status: DonationOfferStatus.REJECTED },
+      }),
     ]);
 
     return { total, pending, confirmed, rejected };

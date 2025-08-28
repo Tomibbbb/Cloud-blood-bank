@@ -2,7 +2,7 @@ export interface CreateUserDto {
   firstName: string; lastName: string; email: string; password: string;
 }
 
-export interface LoginUserDto {
+export interface LoginDto {
   email: string; password: string;
 }
 
@@ -48,7 +48,7 @@ export const authApi = {
     return response.json();
   },
 
-  login: async (credentials: LoginUserDto): Promise<AuthResponse> => {
+  login: async (credentials: LoginDto): Promise<AuthResponse> => {
     const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: {
@@ -230,5 +230,149 @@ export const dashboardApi = {
 
     const result = await response.json();
     return result.stats;
+  },
+};
+
+// Donation offers interfaces and API
+export interface DonationOffer {
+  id: number;
+  bloodType: string;
+  preferredDate: string;
+  location: string;
+  notes?: string;
+  status: 'pending' | 'confirmed' | 'rejected' | 'cancelled';
+  donor: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+  };
+  routedToId?: number;
+  routedToName?: string;
+  appointmentDate?: string;
+  hospitalNotes?: string;
+  rejectionReason?: string;
+  createdAt: string;
+}
+
+export interface DonationOfferQueryParams {
+  status?: string;
+  bloodType?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface ConfirmDonationOfferDto {
+  appointmentDate: string;
+  hospitalNotes?: string;
+}
+
+export interface RejectDonationOfferDto {
+  rejectionReason: string;
+}
+
+export const donationOffersApi = {
+  getHospitalOffers: async (token: string, query?: DonationOfferQueryParams): Promise<DonationOffer[]> => {
+    const queryParams = query ? new URLSearchParams(query as any).toString() : '';
+    const url = queryParams ? `${API_URL}/donations/offers/inbox?${queryParams}` : `${API_URL}/donations/offers/inbox`;
+    
+    const response = await fetch(url, {
+      headers: createAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to get hospital offers');
+    }
+
+    const result = await response.json();
+    return result.offers || [];
+  },
+
+  confirmOffer: async (token: string, offerId: number, confirmData: ConfirmDonationOfferDto): Promise<DonationOffer> => {
+    const response = await fetch(`${API_URL}/donations/offers/${offerId}/confirm`, {
+      method: 'PATCH',
+      headers: createAuthHeaders(token),
+      body: JSON.stringify(confirmData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to confirm offer');
+    }
+
+    const result = await response.json();
+    return result.offer;
+  },
+
+  rejectOffer: async (token: string, offerId: number, rejectData: RejectDonationOfferDto): Promise<DonationOffer> => {
+    const response = await fetch(`${API_URL}/donations/offers/${offerId}/reject`, {
+      method: 'PATCH',
+      headers: createAuthHeaders(token),
+      body: JSON.stringify(rejectData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to reject offer');
+    }
+
+    const result = await response.json();
+    return result.offer;
+  },
+
+  getAllOffers: async (token: string, query?: DonationOfferQueryParams): Promise<DonationOffer[]> => {
+    const queryParams = query ? new URLSearchParams(query as any).toString() : '';
+    const url = queryParams ? `${API_URL}/donations/offers/all?${queryParams}` : `${API_URL}/donations/offers/all`;
+    
+    const response = await fetch(url, {
+      headers: createAuthHeaders(token),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to get all offers');
+    }
+    const result = await response.json();
+    return result.offers || [];
+  },
+};
+
+// Blood Request API
+export interface CreateDonorBloodRequestDto {
+  bloodType: string;
+  units: number;
+  reason?: string;
+  preferredHospitalId?: number;
+}
+
+export interface BloodRequestResponse {
+  message: string;
+  request: any;
+}
+
+export const bloodRequestApi = {
+  createDonorBloodRequest: async (token: string, requestData: CreateDonorBloodRequestDto): Promise<BloodRequestResponse> => {
+    const response = await fetch(`${API_URL}/requests/donor/request-blood`, {
+      method: 'POST',
+      headers: createAuthHeaders(token),
+      body: JSON.stringify(requestData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to create blood request');
+    }
+
+    return response.json();
+  },
+
+  getHospitals: async (token: string): Promise<{ id: number; name: string }[]> => {
+    return [
+      { id: 15, name: 'Royal London Hospital' },
+      { id: 16, name: 'St. Bartholomews Hospital' },
+      { id: 11, name: 'City General Hospital' },
+      { id: 3, name: 'St. Mary Medical Center' },
+    ];
   },
 };

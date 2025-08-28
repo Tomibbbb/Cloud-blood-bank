@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HospitalStock } from './entities/hospital-stock.entity';
@@ -12,12 +16,15 @@ export class HospitalStockService {
     private hospitalStockRepository: Repository<HospitalStock>,
   ) {}
 
-  async createStock(createStockDto: CreateHospitalStockDto, hospitalId: number): Promise<HospitalStock> {
+  async createStock(
+    createStockDto: CreateHospitalStockDto,
+    hospitalId: number,
+  ): Promise<HospitalStock> {
     const stock = this.hospitalStockRepository.create({
       ...createStockDto,
       hospitalId,
     });
-    
+
     return await this.hospitalStockRepository.save(stock);
   }
 
@@ -28,7 +35,11 @@ export class HospitalStockService {
     });
   }
 
-  async updateStock(id: number, updateStockDto: UpdateHospitalStockDto, hospitalId: number): Promise<HospitalStock> {
+  async updateStock(
+    id: number,
+    updateStockDto: UpdateHospitalStockDto,
+    hospitalId: number,
+  ): Promise<HospitalStock> {
     const stock = await this.hospitalStockRepository.findOne({
       where: { id },
     });
@@ -38,7 +49,9 @@ export class HospitalStockService {
     }
 
     if (stock.hospitalId !== hospitalId) {
-      throw new ForbiddenException('You can only update your own hospital stock records');
+      throw new ForbiddenException(
+        'You can only update your own hospital stock records',
+      );
     }
 
     Object.assign(stock, updateStockDto);
@@ -55,7 +68,9 @@ export class HospitalStockService {
     }
 
     if (stock.hospitalId !== hospitalId) {
-      throw new ForbiddenException('You can only delete your own hospital stock records');
+      throw new ForbiddenException(
+        'You can only delete your own hospital stock records',
+      );
     }
 
     await this.hospitalStockRepository.remove(stock);
@@ -66,11 +81,15 @@ export class HospitalStockService {
       where: { hospitalId },
     });
 
-    const totalBloodUnits = stocks.reduce((sum, stock) => sum + stock.unitsAvailable, 0);
+    const totalBloodUnits = stocks.reduce(
+      (sum, stock) => sum + stock.unitsAvailable,
+      0,
+    );
 
-    const bloodTypesAvailable = new Set(stocks.map(stock => stock.bloodType)).size;
+    const bloodTypesAvailable = new Set(stocks.map((stock) => stock.bloodType))
+      .size;
 
-    const expiringSoon = stocks.filter(stock => {
+    const expiringSoon = stocks.filter((stock) => {
       if (!stock.expiryDate) return false;
       const expiry = new Date(stock.expiryDate);
       const today = new Date();
@@ -79,7 +98,9 @@ export class HospitalStockService {
       return diffDays <= 7 && diffDays >= 0;
     }).length;
 
-    const criticalStock = stocks.filter(stock => stock.unitsAvailable < 5).length;
+    const criticalStock = stocks.filter(
+      (stock) => stock.unitsAvailable < 5,
+    ).length;
 
     const pendingRequests = 0; // This should be fetched from blood requests table
 
@@ -89,19 +110,21 @@ export class HospitalStockService {
       pendingRequests,
       criticalStock,
       expiringSoon,
-      stockDetails: stocks.map(stock => ({
+      stockDetails: stocks.map((stock) => ({
         bloodType: stock.bloodType,
         unitsAvailable: stock.unitsAvailable,
         expiryDate: stock.expiryDate,
-        isExpiringSoon: stock.expiryDate ? (() => {
-          const expiry = new Date(stock.expiryDate);
-          const today = new Date();
-          const diffTime = expiry.getTime() - today.getTime();
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          return diffDays <= 7 && diffDays >= 0;
-        })() : false,
-        isCritical: stock.unitsAvailable < 5
-      }))
+        isExpiringSoon: stock.expiryDate
+          ? (() => {
+              const expiry = new Date(stock.expiryDate);
+              const today = new Date();
+              const diffTime = expiry.getTime() - today.getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              return diffDays <= 7 && diffDays >= 0;
+            })()
+          : false,
+        isCritical: stock.unitsAvailable < 5,
+      })),
     };
   }
 }

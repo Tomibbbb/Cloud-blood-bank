@@ -28,8 +28,14 @@ export class DonationOffersController {
 
   @Post()
   @Roles(UserRole.DONOR)
-  async createOffer(@Request() req, @Body() createOfferDto: CreateDonationOfferDto) {
-    const offer = await this.donationOffersService.createOffer(req.user.sub, createOfferDto);
+  async createOffer(
+    @Request() req,
+    @Body() createOfferDto: CreateDonationOfferDto,
+  ) {
+    const offer = await this.donationOffersService.createOffer(
+      req.user.sub,
+      createOfferDto,
+    );
     return {
       message: 'Donation offer created successfully',
       offer,
@@ -48,8 +54,14 @@ export class DonationOffersController {
 
   @Get('inbox')
   @Roles(UserRole.HOSPITAL)
-  async getHospitalOffers(@Request() req, @Query() query: DonationOfferQueryDto) {
-    const offers = await this.donationOffersService.getHospitalOffers(req.user.sub, query);
+  async getHospitalOffers(
+    @Request() req,
+    @Query() query: DonationOfferQueryDto,
+  ) {
+    const offers = await this.donationOffersService.getHospitalOffers(
+      req.user.sub,
+      query,
+    );
     return {
       message: 'Hospital offers retrieved successfully',
       offers,
@@ -74,12 +86,12 @@ export class DonationOffersController {
   async confirmOffer(
     @Param('id') id: string,
     @Request() req,
-    @Body() confirmDto: ConfirmDonationOfferDto
+    @Body() confirmDto: ConfirmDonationOfferDto,
   ) {
     const offer = await this.donationOffersService.confirmOffer(
       parseInt(id),
       req.user.sub,
-      confirmDto
+      confirmDto,
     );
     return {
       message: 'Donation offer confirmed successfully',
@@ -93,12 +105,12 @@ export class DonationOffersController {
   async rejectOffer(
     @Param('id') id: string,
     @Request() req,
-    @Body() rejectDto: RejectDonationOfferDto
+    @Body() rejectDto: RejectDonationOfferDto,
   ) {
     const offer = await this.donationOffersService.rejectOffer(
       parseInt(id),
       req.user.sub,
-      rejectDto
+      rejectDto,
     );
     return {
       message: 'Donation offer rejected successfully',
@@ -110,7 +122,10 @@ export class DonationOffersController {
   @Roles(UserRole.DONOR)
   @HttpCode(HttpStatus.OK)
   async cancelOffer(@Param('id') id: string, @Request() req) {
-    const offer = await this.donationOffersService.cancelOffer(parseInt(id), req.user.sub);
+    const offer = await this.donationOffersService.cancelOffer(
+      parseInt(id),
+      req.user.sub,
+    );
     return {
       message: 'Donation offer cancelled successfully',
       offer,

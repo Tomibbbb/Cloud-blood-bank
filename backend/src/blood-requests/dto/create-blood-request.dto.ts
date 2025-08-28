@@ -1,11 +1,19 @@
-import { IsNotEmpty, IsString, IsEnum, IsNumber, IsDateString, IsOptional, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsDateString,
+  IsOptional,
+  Min,
+} from 'class-validator';
 import { BloodGroup } from '../../blood-inventory/entities/blood-inventory.entity';
 
 export enum Priority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 export class CreateBloodRequestDto {

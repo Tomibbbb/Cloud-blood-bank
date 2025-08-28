@@ -1,4 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum BloodType {
@@ -9,13 +17,13 @@ export enum BloodType {
   AB_POSITIVE = 'AB+',
   AB_NEGATIVE = 'AB-',
   O_POSITIVE = 'O+',
-  O_NEGATIVE = 'O-'
+  O_NEGATIVE = 'O-',
 }
 
 export enum DonorStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
-  SUSPENDED = 'suspended'
+  SUSPENDED = 'suspended',
 }
 
 @Entity('donors')
@@ -57,7 +65,7 @@ export class Donor {
   @Column({
     type: 'enum',
     enum: DonorStatus,
-    default: DonorStatus.ACTIVE
+    default: DonorStatus.ACTIVE,
   })
   status: DonorStatus;
 

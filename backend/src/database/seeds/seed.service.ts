@@ -3,9 +3,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User, UserRole } from '../../users/entities/user.entity';
-import { Donor, BloodType, DonorStatus } from '../../donors/entities/donor.entity';
-import { BloodInventory, BloodGroup } from '../../blood-inventory/entities/blood-inventory.entity';
-import { BloodRequest, RequestStatus, Priority } from '../../blood-requests/entities/blood-request.entity';
+import {
+  Donor,
+  BloodType,
+  DonorStatus,
+} from '../../donors/entities/donor.entity';
+import {
+  BloodInventory,
+  BloodGroup,
+} from '../../blood-inventory/entities/blood-inventory.entity';
+import {
+  BloodRequest,
+  RequestStatus,
+  Priority,
+} from '../../blood-requests/entities/blood-request.entity';
 
 @Injectable()
 export class SeedService {
@@ -21,7 +32,7 @@ export class SeedService {
   ) {}
 
   async seed() {
-    console.log('🌱 Starting database seeding...');
+    
 
     await this.clearDatabase();
 
@@ -30,36 +41,47 @@ export class SeedService {
     await this.seedBloodInventory();
     await this.seedBloodRequests(users);
 
-    console.log('✅ Database seeding completed successfully!');
-    console.log('📊 Seeded data summary:');
-    console.log(`   - ${users.length} users (5 donors, 2 hospitals, 1 admin)`);
-    console.log(`   - ${donors.length} donor profiles`);
-    console.log('   - 8 blood inventory records');
-    console.log('   - 3 blood request records');
+    
+    
+    
+    
+    
+    
   }
 
   private async clearDatabase() {
-    console.log('🧹 Clearing existing data...');
     
-    const queryRunner = this.userRepository.manager.connection.createQueryRunner();
+
+    const queryRunner =
+      this.userRepository.manager.connection.createQueryRunner();
     await queryRunner.connect();
-    
+
     try {
-      await queryRunner.query('TRUNCATE TABLE "blood_requests" RESTART IDENTITY CASCADE;');
-      await queryRunner.query('TRUNCATE TABLE "blood_inventory" RESTART IDENTITY CASCADE;');
-      await queryRunner.query('TRUNCATE TABLE "donors" RESTART IDENTITY CASCADE;');
-      await queryRunner.query('TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;');
-      
+      await queryRunner.query(
+        'TRUNCATE TABLE "blood_requests" RESTART IDENTITY CASCADE;',
+      );
+      await queryRunner.query(
+        'TRUNCATE TABLE "blood_inventory" RESTART IDENTITY CASCADE;',
+      );
+      await queryRunner.query(
+        'TRUNCATE TABLE "donors" RESTART IDENTITY CASCADE;',
+      );
+      await queryRunner.query(
+        'TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;',
+      );
     } finally {
       await queryRunner.release();
     }
   }
 
   private async seedUsers(): Promise<User[]> {
-    console.log('👥 Seeding users...');
     
-    const hashedPassword = await bcrypt.hash(process.env.DEFAULT_SEED_PASSWORD || 'defaultpass', 12);
-    
+
+    const hashedPassword = await bcrypt.hash(
+      process.env.DEFAULT_SEED_PASSWORD || 'defaultpass',
+      12,
+    );
+
     const usersData = [
       {
         firstName: 'System',
@@ -69,7 +91,7 @@ export class SeedService {
         role: UserRole.ADMIN,
         phone: '+1-555-0001',
         bloodType: 'O+',
-        address: 'Blood Bank HQ, Medical District'
+        address: 'Blood Bank HQ, Medical District',
       },
       {
         firstName: 'City General',
@@ -78,7 +100,7 @@ export class SeedService {
         password: hashedPassword,
         role: UserRole.HOSPITAL,
         phone: '+1-555-0100',
-        address: '123 Medical Center Dr, Downtown'
+        address: '123 Medical Center Dr, Downtown',
       },
       {
         firstName: 'St. Mary',
@@ -87,7 +109,7 @@ export class SeedService {
         password: hashedPassword,
         role: UserRole.HOSPITAL,
         phone: '+1-555-0200',
-        address: '456 Healthcare Ave, Uptown'
+        address: '456 Healthcare Ave, Uptown',
       },
       {
         firstName: 'John',
@@ -98,7 +120,7 @@ export class SeedService {
         phone: '+1-555-1001',
         bloodType: 'A+',
         address: '789 Elm Street, Suburbs',
-        dateOfBirth: new Date('1985-03-15')
+        dateOfBirth: new Date('1985-03-15'),
       },
       {
         firstName: 'Sarah',
@@ -109,7 +131,7 @@ export class SeedService {
         phone: '+1-555-1002',
         bloodType: 'O-',
         address: '321 Oak Avenue, Midtown',
-        dateOfBirth: new Date('1990-07-22')
+        dateOfBirth: new Date('1990-07-22'),
       },
       {
         firstName: 'Michael',
@@ -120,7 +142,7 @@ export class SeedService {
         phone: '+1-555-1003',
         bloodType: 'B+',
         address: '654 Pine Road, Eastside',
-        dateOfBirth: new Date('1988-11-08')
+        dateOfBirth: new Date('1988-11-08'),
       },
       {
         firstName: 'Emily',
@@ -131,7 +153,7 @@ export class SeedService {
         phone: '+1-555-1004',
         bloodType: 'AB-',
         address: '987 Maple Lane, Westside',
-        dateOfBirth: new Date('1992-05-30')
+        dateOfBirth: new Date('1992-05-30'),
       },
       {
         firstName: 'Robert',
@@ -142,8 +164,8 @@ export class SeedService {
         phone: '+1-555-1005',
         bloodType: 'A-',
         address: '147 Cedar Circle, Northside',
-        dateOfBirth: new Date('1987-09-12')
-      }
+        dateOfBirth: new Date('1987-09-12'),
+      },
     ];
 
     const users: User[] = [];
@@ -153,14 +175,14 @@ export class SeedService {
       users.push(savedUser);
     }
 
-    console.log(`   ✓ Created ${users.length} users`);
+    
     return users;
   }
 
   private async seedDonors(users: User[]): Promise<Donor[]> {
-    console.log('🩸 Seeding donor profiles...');
     
-    const donorUsers = users.filter(user => user.role === UserRole.DONOR);
+
+    const donorUsers = users.filter((user) => user.role === UserRole.DONOR);
     const donors: Donor[] = [];
 
     const donorData = [
@@ -172,7 +194,7 @@ export class SeedService {
         totalDonations: 8,
         lastDonationDate: new Date('2025-06-15'),
         emergencyContact: 'Jane Smith',
-        emergencyPhone: '+1-555-2001'
+        emergencyPhone: '+1-555-2001',
       },
       {
         bloodType: BloodType.O_NEGATIVE,
@@ -182,7 +204,7 @@ export class SeedService {
         totalDonations: 12,
         lastDonationDate: new Date('2025-05-28'),
         emergencyContact: 'Mark Johnson',
-        emergencyPhone: '+1-555-2002'
+        emergencyPhone: '+1-555-2002',
       },
       {
         bloodType: BloodType.B_POSITIVE,
@@ -192,7 +214,7 @@ export class SeedService {
         totalDonations: 15,
         lastDonationDate: new Date('2025-07-10'),
         emergencyContact: 'Lisa Davis',
-        emergencyPhone: '+1-555-2003'
+        emergencyPhone: '+1-555-2003',
       },
       {
         bloodType: BloodType.AB_NEGATIVE,
@@ -202,7 +224,7 @@ export class SeedService {
         totalDonations: 6,
         lastDonationDate: new Date('2025-04-20'),
         emergencyContact: 'Tom Wilson',
-        emergencyPhone: '+1-555-2004'
+        emergencyPhone: '+1-555-2004',
       },
       {
         bloodType: BloodType.A_NEGATIVE,
@@ -212,8 +234,8 @@ export class SeedService {
         totalDonations: 10,
         lastDonationDate: new Date('2025-06-05'),
         emergencyContact: 'Mary Brown',
-        emergencyPhone: '+1-555-2005'
-      }
+        emergencyPhone: '+1-555-2005',
+      },
     ];
 
     for (let i = 0; i < donorUsers.length; i++) {
@@ -221,29 +243,69 @@ export class SeedService {
         userId: donorUsers[i].id,
         dateOfBirth: donorUsers[i].dateOfBirth,
         status: DonorStatus.ACTIVE,
-        ...donorData[i]
+        ...donorData[i],
       });
-      
+
       const savedDonor = await this.donorRepository.save(donorProfile);
       donors.push(savedDonor);
     }
 
-    console.log(`   ✓ Created ${donors.length} donor profiles`);
+    
     return donors;
   }
 
   private async seedBloodInventory() {
-    console.log('🏥 Seeding blood inventory...');
     
+
     const inventoryData = [
-      { bloodGroup: BloodGroup.A_POSITIVE, unitsAvailable: 25, location: 'City General Hospital', expiryDate: new Date('2025-09-15') },
-      { bloodGroup: BloodGroup.A_NEGATIVE, unitsAvailable: 12, location: 'City General Hospital', expiryDate: new Date('2025-09-20') },
-      { bloodGroup: BloodGroup.B_POSITIVE, unitsAvailable: 18, location: 'City General Hospital', expiryDate: new Date('2025-09-10') },
-      { bloodGroup: BloodGroup.B_NEGATIVE, unitsAvailable: 8, location: 'City General Hospital', expiryDate: new Date('2025-09-25') },
-      { bloodGroup: BloodGroup.O_POSITIVE, unitsAvailable: 35, location: 'City General Hospital', expiryDate: new Date('2025-09-12') },
-      { bloodGroup: BloodGroup.O_NEGATIVE, unitsAvailable: 15, location: 'City General Hospital', expiryDate: new Date('2025-09-18') },
-      { bloodGroup: BloodGroup.AB_POSITIVE, unitsAvailable: 10, location: 'City General Hospital', expiryDate: new Date('2025-09-22') },
-      { bloodGroup: BloodGroup.AB_NEGATIVE, unitsAvailable: 5, location: 'City General Hospital', expiryDate: new Date('2025-09-28') }
+      {
+        bloodGroup: BloodGroup.A_POSITIVE,
+        unitsAvailable: 25,
+        location: 'City General Hospital',
+        expiryDate: new Date('2025-09-15'),
+      },
+      {
+        bloodGroup: BloodGroup.A_NEGATIVE,
+        unitsAvailable: 12,
+        location: 'City General Hospital',
+        expiryDate: new Date('2025-09-20'),
+      },
+      {
+        bloodGroup: BloodGroup.B_POSITIVE,
+        unitsAvailable: 18,
+        location: 'City General Hospital',
+        expiryDate: new Date('2025-09-10'),
+      },
+      {
+        bloodGroup: BloodGroup.B_NEGATIVE,
+        unitsAvailable: 8,
+        location: 'City General Hospital',
+        expiryDate: new Date('2025-09-25'),
+      },
+      {
+        bloodGroup: BloodGroup.O_POSITIVE,
+        unitsAvailable: 35,
+        location: 'City General Hospital',
+        expiryDate: new Date('2025-09-12'),
+      },
+      {
+        bloodGroup: BloodGroup.O_NEGATIVE,
+        unitsAvailable: 15,
+        location: 'City General Hospital',
+        expiryDate: new Date('2025-09-18'),
+      },
+      {
+        bloodGroup: BloodGroup.AB_POSITIVE,
+        unitsAvailable: 10,
+        location: 'City General Hospital',
+        expiryDate: new Date('2025-09-22'),
+      },
+      {
+        bloodGroup: BloodGroup.AB_NEGATIVE,
+        unitsAvailable: 5,
+        location: 'City General Hospital',
+        expiryDate: new Date('2025-09-28'),
+      },
     ];
 
     for (const inventory of inventoryData) {
@@ -251,14 +313,16 @@ export class SeedService {
       await this.inventoryRepository.save(inventoryRecord);
     }
 
-    console.log(`   ✓ Created ${inventoryData.length} inventory records`);
+    
   }
 
   private async seedBloodRequests(users: User[]) {
-    console.log('📋 Seeding blood requests...');
     
-    const hospitalUsers = users.filter(user => user.role === UserRole.HOSPITAL);
-    
+
+    const hospitalUsers = users.filter(
+      (user) => user.role === UserRole.HOSPITAL,
+    );
+
     const requestData = [
       {
         bloodGroup: BloodGroup.O_NEGATIVE,
@@ -270,7 +334,7 @@ export class SeedService {
         patientAge: 35,
         requiredBy: new Date('2025-08-02'),
         notes: 'Urgent - patient in OR now',
-        requestedById: hospitalUsers[0].id
+        requestedById: hospitalUsers[0].id,
       },
       {
         bloodGroup: BloodGroup.A_POSITIVE,
@@ -282,7 +346,7 @@ export class SeedService {
         patientAge: 58,
         requiredBy: new Date('2025-08-05'),
         notes: 'Surgery scheduled for Friday morning',
-        requestedById: hospitalUsers[1].id
+        requestedById: hospitalUsers[1].id,
       },
       {
         bloodGroup: BloodGroup.B_POSITIVE,
@@ -294,8 +358,8 @@ export class SeedService {
         patientAge: 72,
         requiredBy: new Date('2025-08-08'),
         notes: 'Non-urgent scheduled procedure',
-        requestedById: hospitalUsers[0].id
-      }
+        requestedById: hospitalUsers[0].id,
+      },
     ];
 
     for (const request of requestData) {
@@ -303,6 +367,6 @@ export class SeedService {
       await this.requestRepository.save(bloodRequest);
     }
 
-    console.log(`   ✓ Created ${requestData.length} blood requests`);
+    
   }
 }

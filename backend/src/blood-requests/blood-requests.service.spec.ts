@@ -3,10 +3,17 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { BloodRequestsService } from './blood-requests.service';
-import { BloodRequest, RequestStatus, Priority } from './entities/blood-request.entity';
+import {
+  BloodRequest,
+  RequestStatus,
+  Priority,
+} from './entities/blood-request.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 import { Donor } from '../donors/entities/donor.entity';
-import { Donation, DonationStatus } from '../donations/entities/donation.entity';
+import {
+  Donation,
+  DonationStatus,
+} from '../donations/entities/donation.entity';
 import { BloodGroup } from '../blood-inventory/entities/blood-inventory.entity';
 import { CreateDonorBloodRequestDto } from './dto/create-donor-blood-request.dto';
 
@@ -61,10 +68,14 @@ describe('BloodRequestsService', () => {
     }).compile();
 
     service = module.get<BloodRequestsService>(BloodRequestsService);
-    bloodRequestRepository = module.get<Repository<BloodRequest>>(getRepositoryToken(BloodRequest));
+    bloodRequestRepository = module.get<Repository<BloodRequest>>(
+      getRepositoryToken(BloodRequest),
+    );
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
     donorRepository = module.get<Repository<Donor>>(getRepositoryToken(Donor));
-    donationRepository = module.get<Repository<Donation>>(getRepositoryToken(Donation));
+    donationRepository = module.get<Repository<Donation>>(
+      getRepositoryToken(Donation),
+    );
   });
 
   afterEach(() => {
@@ -107,13 +118,13 @@ describe('BloodRequestsService', () => {
       const result = await service.createDonorBloodRequest(mockDto, mockUserId);
 
       expect(mockDonorRepository.findOne).toHaveBeenCalledWith({
-        where: { userId: mockUserId }
+        where: { userId: mockUserId },
       });
       expect(mockDonationRepository.count).toHaveBeenCalledWith({
-        where: { 
+        where: {
           donorId: mockUserId,
-          status: DonationStatus.COMPLETED
-        }
+          status: DonationStatus.COMPLETED,
+        },
       });
       expect(mockBloodRequestRepository.create).toHaveBeenCalledWith({
         requesterDonorId: mockDonorId,
@@ -128,18 +139,21 @@ describe('BloodRequestsService', () => {
         patientAge: 0,
         requiredBy: expect.any(Date),
       });
-      expect(mockBloodRequestRepository.save).toHaveBeenCalledWith(mockBloodRequest);
+      expect(mockBloodRequestRepository.save).toHaveBeenCalledWith(
+        mockBloodRequest,
+      );
       expect(result).toEqual(mockBloodRequest);
     });
 
     it('should throw NotFoundException when donor profile not found', async () => {
       mockDonorRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.createDonorBloodRequest(mockDto, mockUserId))
-        .rejects.toThrow(NotFoundException);
-      
+      await expect(
+        service.createDonorBloodRequest(mockDto, mockUserId),
+      ).rejects.toThrow(NotFoundException);
+
       expect(mockDonorRepository.findOne).toHaveBeenCalledWith({
-        where: { userId: mockUserId }
+        where: { userId: mockUserId },
       });
       expect(mockDonationRepository.count).not.toHaveBeenCalled();
     });
@@ -148,17 +162,18 @@ describe('BloodRequestsService', () => {
       mockDonorRepository.findOne.mockResolvedValue(mockDonor);
       mockDonationRepository.count.mockResolvedValue(0); // No completed donations
 
-      await expect(service.createDonorBloodRequest(mockDto, mockUserId))
-        .rejects.toThrow(ForbiddenException);
-      
+      await expect(
+        service.createDonorBloodRequest(mockDto, mockUserId),
+      ).rejects.toThrow(ForbiddenException);
+
       expect(mockDonorRepository.findOne).toHaveBeenCalledWith({
-        where: { userId: mockUserId }
+        where: { userId: mockUserId },
       });
       expect(mockDonationRepository.count).toHaveBeenCalledWith({
-        where: { 
+        where: {
           donorId: mockUserId,
-          status: DonationStatus.COMPLETED
-        }
+          status: DonationStatus.COMPLETED,
+        },
       });
       expect(mockBloodRequestRepository.create).not.toHaveBeenCalled();
     });

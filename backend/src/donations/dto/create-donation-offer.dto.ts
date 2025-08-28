@@ -1,4 +1,10 @@
-import { IsString, IsDateString, IsOptional, IsEnum, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsDateString,
+  IsOptional,
+  IsEnum,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class CreateDonationOfferDto {
   @IsString()

@@ -18,7 +18,16 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "api:test:unit": "jest --config ./test/jest-unit.json",
+    "api:test:integration": "jest --config ./test/jest-integration.json",
+    "api:test:e2e": "jest --config ./test/jest-e2e.json",
+    "api:test:all": "npm run api:test:unit && npm run api:test:integration && npm run api:test:e2e",
+    "test:coverage": "jest --config ./test/jest-unit.json --coverage && jest --config ./test/jest-integration.json --coverage --coverageDirectory=coverage/integration",
+    "test:security": "npm run api:test:unit -- --testNamePattern=\"Security|RBAC|Auth|IDOR\"",
+    "test:performance": "node test/performance/autocannon-test.js",
+    "test:reliability": "jest --config ./test/jest-reliability.json",
     "seed": "ts-node -r tsconfig-paths/register src/database/seeds/seed.ts",
+    "seed:test": "NODE_ENV=test ts-node -r tsconfig-paths/register test/fixtures/seed-test-data.ts",
     "typeorm:run": "typeorm-ts-node-esm migration:run -d src/database/data-source.ts",
     "typeorm:revert": "typeorm-ts-node-esm migration:revert -d src/database/data-source.ts",
     "typeorm:generate": "typeorm-ts-node-esm migration:generate src/migrations/InitSchema -d src/database/data-source.ts"
@@ -78,7 +87,10 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "testcontainers": "^10.13.2",
+    "autocannon": "^7.15.0",
+    "@testcontainers/postgresql": "^10.13.2"
   },
   "jest": {
     "moduleFileExtensions": [

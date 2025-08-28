@@ -36,6 +36,7 @@ import {
   Pending,
   Cancel,
   Refresh,
+  LocalHospitalOutlined,
 } from '@mui/icons-material';
 import { useAuth } from '../../../contexts/AuthContext';
 import ProtectedRoute from '../../../components/ProtectedRoute';
@@ -75,7 +76,6 @@ export default function DonorDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Mock data for demo purposes
   const mockDonations: DonationRecord[] = [
     {
       id: 1,
@@ -366,6 +366,27 @@ export default function DonorDashboard() {
                       }}
                     >
                       Update Profile
+                    </Button>
+                    <Button
+                      component={Link}
+                      href="/donor/request-blood"
+                      variant="outlined"
+                      startIcon={<LocalHospitalOutlined />}
+                      fullWidth
+                      sx={{
+                        py: 1.5,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        color: '#C62828',
+                        borderColor: '#C62828',
+                        '&:hover': {
+                          backgroundColor: 'rgba(198, 40, 40, 0.04)',
+                          borderColor: '#8e0000',
+                        },
+                      }}
+                    >
+                      Request Blood
                     </Button>
                     <Button
                       component={Link}

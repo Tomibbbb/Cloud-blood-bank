@@ -11,6 +11,6 @@ import { Donation } from '../donations/entities/donation.entity';
   imports: [TypeOrmModule.forFeature([BloodRequest, User, Donor, Donation])],
   providers: [BloodRequestsService],
   controllers: [BloodRequestsController],
-  exports: [BloodRequestsService]
+  exports: [BloodRequestsService],
 })
 export class BloodRequestsModule {}

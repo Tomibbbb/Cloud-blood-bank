@@ -1,4 +1,14 @@
-import { Controller, Post, Body, Get, Put, Delete, UseGuards, Param, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Put,
+  Delete,
+  UseGuards,
+  Param,
+  Request,
+} from '@nestjs/common';
 import { HospitalStockService } from './hospital-stock.service';
 import { CreateHospitalStockDto } from './dto/create-hospital-stock.dto';
 import { UpdateHospitalStockDto } from './dto/update-hospital-stock.dto';
@@ -14,12 +24,18 @@ export class HospitalStockController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.HOSPITAL)
-  async createStock(@Body() createStockDto: CreateHospitalStockDto, @Request() req) {
+  async createStock(
+    @Body() createStockDto: CreateHospitalStockDto,
+    @Request() req,
+  ) {
     const hospitalId = req.user.id;
-    const stock = await this.hospitalStockService.createStock(createStockDto, hospitalId);
+    const stock = await this.hospitalStockService.createStock(
+      createStockDto,
+      hospitalId,
+    );
     return {
       message: 'Hospital stock record created successfully',
-      stock
+      stock,
     };
   }
 
@@ -31,7 +47,7 @@ export class HospitalStockController {
     const stats = await this.hospitalStockService.getDashboardStats(hospitalId);
     return {
       message: 'Dashboard statistics retrieved successfully',
-      ...stats
+      ...stats,
     };
   }
 
@@ -43,7 +59,7 @@ export class HospitalStockController {
     const stocks = await this.hospitalStockService.getHospitalStock(hospitalId);
     return {
       message: 'Hospital stock retrieved successfully',
-      stocks
+      stocks,
     };
   }
 
@@ -53,13 +69,17 @@ export class HospitalStockController {
   async updateStock(
     @Param('id') id: number,
     @Body() updateStockDto: UpdateHospitalStockDto,
-    @Request() req
+    @Request() req,
   ) {
     const hospitalId = req.user.id;
-    const stock = await this.hospitalStockService.updateStock(id, updateStockDto, hospitalId);
+    const stock = await this.hospitalStockService.updateStock(
+      id,
+      updateStockDto,
+      hospitalId,
+    );
     return {
       message: 'Hospital stock record updated successfully',
-      stock
+      stock,
     };
   }
 
@@ -70,7 +90,7 @@ export class HospitalStockController {
     const hospitalId = req.user.id;
     await this.hospitalStockService.deleteStock(id, hospitalId);
     return {
-      message: 'Hospital stock record deleted successfully'
+      message: 'Hospital stock record deleted successfully',
     };
   }
 }

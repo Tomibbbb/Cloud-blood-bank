@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsString, IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  Min,
+} from 'class-validator';
 import { BloodGroup } from '../../blood-inventory/entities/blood-inventory.entity';
 
 export class CreateDonorBloodRequestDto {

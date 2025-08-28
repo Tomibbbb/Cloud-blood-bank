@@ -26,7 +26,6 @@ import {
   PersonAdd as PersonAddIcon,
   Person,
   LocalHospital,
-  AdminPanelSettings,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -83,9 +82,6 @@ export default function RegisterPage() {
       
       // Redirect based on role after registration
       switch (formData.role) {
-        case 'admin':
-          router.push('/admin/dashboard');
-          break;
         case 'hospital':
           router.push('/hospital/requests');
           break;
@@ -117,8 +113,6 @@ export default function RegisterPage() {
         return <Person />;
       case 'hospital':
         return <LocalHospital />;
-      case 'admin':
-        return <AdminPanelSettings />;
       default:
         return <Person />;
     }
@@ -308,12 +302,6 @@ export default function RegisterPage() {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <LocalHospital fontSize="small" />
                           Hospital
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="admin">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <AdminPanelSettings fontSize="small" />
-                          NHS Blood Manager
                         </Box>
                       </MenuItem>
                     </Select>

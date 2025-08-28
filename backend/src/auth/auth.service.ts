@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
@@ -13,7 +18,16 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signup(signupDto: SignupDto): Promise<{ user: Partial<User>; token: string }> {
+  async signup(
+    signupDto: SignupDto,
+  ): Promise<{ user: Partial<User>; token: string }> {
+    // Admin accounts cannot be created through public registration
+    if (signupDto.role === UserRole.ADMIN) {
+      throw new ForbiddenException(
+        'Admin accounts cannot be created through public registration',
+      );
+    }
+
     try {
       const existingUser = await this.usersService.findByEmail(signupDto.email);
       if (existingUser) {
@@ -24,24 +38,33 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(signupDto.password, 12);
-    const userData = { ...signupDto, password: hashedPassword, role: signupDto.role || UserRole.DONOR };
+    const userData = {
+      ...signupDto,
+      password: hashedPassword,
+      role: signupDto.role || UserRole.DONOR,
+    };
     const user = await this.usersService.create(userData);
     const token = this.generateToken(user);
-    const { password, ...userWithoutPassword } = user;
-    
+    const { password: _, ...userWithoutPassword } = user;
+
     return { user: userWithoutPassword, token };
   }
 
-  async login(loginDto: LoginDto): Promise<{ user: Partial<User>; token: string }> {
+  async login(
+    loginDto: LoginDto,
+  ): Promise<{ user: Partial<User>; token: string }> {
     const user = await this.usersService.findByEmail(loginDto.email);
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
-    
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const token = this.generateToken(user);
-    const { password, ...userWithoutPassword } = user;
+    const { password: _, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, token };
   }
 

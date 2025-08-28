@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Donor } from './entities/donor.entity';
@@ -15,9 +19,11 @@ export class DonorsService {
     private userRepository: Repository<User>,
   ) {}
 
-  async registerDonor(createDonorDto: CreateDonorDto): Promise<{ donor: Donor; user: User }> {
+  async registerDonor(
+    createDonorDto: CreateDonorDto,
+  ): Promise<{ donor: Donor; user: User }> {
     const existingUser = await this.userRepository.findOne({
-      where: { email: createDonorDto.email }
+      where: { email: createDonorDto.email },
     });
 
     if (existingUser) {
@@ -32,7 +38,7 @@ export class DonorsService {
       address: createDonorDto.address,
       bloodType: createDonorDto.bloodType,
       role: UserRole.DONOR,
-      password: 'temp_password_will_be_set_later'
+      password: 'temp_password_will_be_set_later',
     });
 
     const savedUser = await this.userRepository.save(newUser);
@@ -40,7 +46,9 @@ export class DonorsService {
     const newDonor = this.donorRepository.create({
       userId: savedUser.id,
       bloodType: createDonorDto.bloodType,
-      dateOfBirth: createDonorDto.dateOfBirth ? new Date(createDonorDto.dateOfBirth) : undefined,
+      dateOfBirth: createDonorDto.dateOfBirth
+        ? new Date(createDonorDto.dateOfBirth)
+        : undefined,
       weight: createDonorDto.weight,
       height: createDonorDto.height,
       medicalHistory: createDonorDto.medicalHistory,
@@ -52,14 +60,14 @@ export class DonorsService {
 
     return {
       user: savedUser,
-      donor: savedDonor
+      donor: savedDonor,
     };
   }
 
   async findDonorByUserId(userId: number): Promise<Donor> {
     const donor = await this.donorRepository.findOne({
       where: { userId },
-      relations: ['user']
+      relations: ['user'],
     });
 
     if (!donor) {
@@ -72,14 +80,14 @@ export class DonorsService {
   async getAllDonors(): Promise<Donor[]> {
     return this.donorRepository.find({
       relations: ['user'],
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 
   async findDonorById(id: number): Promise<Donor> {
     const donor = await this.donorRepository.findOne({
       where: { id },
-      relations: ['user']
+      relations: ['user'],
     });
 
     if (!donor) {
@@ -89,13 +97,20 @@ export class DonorsService {
     return donor;
   }
 
-  async updateDonor(id: number, updateDonorDto: UpdateDonorDto): Promise<Donor> {
+  async updateDonor(
+    id: number,
+    updateDonorDto: UpdateDonorDto,
+  ): Promise<Donor> {
     const donor = await this.findDonorById(id);
 
     Object.assign(donor, {
       ...updateDonorDto,
-      dateOfBirth: updateDonorDto.dateOfBirth ? new Date(updateDonorDto.dateOfBirth) : donor.dateOfBirth,
-      lastDonationDate: updateDonorDto.lastDonationDate ? new Date(updateDonorDto.lastDonationDate) : donor.lastDonationDate,
+      dateOfBirth: updateDonorDto.dateOfBirth
+        ? new Date(updateDonorDto.dateOfBirth)
+        : donor.dateOfBirth,
+      lastDonationDate: updateDonorDto.lastDonationDate
+        ? new Date(updateDonorDto.lastDonationDate)
+        : donor.lastDonationDate,
     });
 
     return this.donorRepository.save(donor);

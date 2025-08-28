@@ -1,4 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Donor } from '../../donors/entities/donor.entity';
 import { BloodGroup } from '../../blood-inventory/entities/blood-inventory.entity';
@@ -7,14 +15,14 @@ export enum RequestStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  FULFILLED = 'fulfilled'
+  FULFILLED = 'fulfilled',
 }
 
 export enum Priority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 @Entity('blood_requests')
@@ -34,14 +42,14 @@ export class BloodRequest {
   @Column({
     type: 'enum',
     enum: Priority,
-    default: Priority.MEDIUM
+    default: Priority.MEDIUM,
   })
   priority: Priority;
 
   @Column({
     type: 'enum',
     enum: RequestStatus,
-    default: RequestStatus.PENDING
+    default: RequestStatus.PENDING,
   })
   status: RequestStatus;
 

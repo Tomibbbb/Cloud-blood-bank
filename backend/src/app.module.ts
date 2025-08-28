@@ -20,16 +20,22 @@ import { HealthModule } from './health/health.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        type: 'postgres',
-        url: configService.get<string>('DATABASE_URL'),
-        ssl: {
-          rejectUnauthorized: false,
-        },
-        autoLoadEntities: true,
-        synchronize: true, // Temporarily enabled to create schema
-        logging: process.env.NODE_ENV === 'development',
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+        const needsSSL =
+          databaseUrl?.includes('sslmode=require') ||
+          (process.env.NODE_ENV === 'production' &&
+            !databaseUrl?.includes('localhost'));
+
+        return {
+          type: 'postgres',
+          url: databaseUrl,
+          ssl: needsSSL ? { rejectUnauthorized: false } : false,
+          autoLoadEntities: true,
+          synchronize: true, // Temporarily enabled to create schema
+          logging: process.env.NODE_ENV === 'development',
+        };
+      },
     }),
     UsersModule,
     AuthModule,

@@ -73,7 +73,7 @@ export default function DonorProfilePage() {
           try {
             profileData = JSON.parse(savedProfile);
           } catch (e) {
-            console.log('Error parsing saved profile data');
+            
           }
         }
         
@@ -119,7 +119,7 @@ export default function DonorProfilePage() {
         
         setIsLoading(false);
       } catch (err: unknown) {
-        console.log('Error loading donor profile, using user data for prefill:', err);
+        
         setIsLoading(false);
       }
     };

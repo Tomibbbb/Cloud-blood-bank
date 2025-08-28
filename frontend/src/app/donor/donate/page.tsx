@@ -71,7 +71,7 @@ export default function DonatePage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Mock success response
-      console.log('Donation offer submitted:', formData);
+      
       setSuccess(true);
 
       // Reset form

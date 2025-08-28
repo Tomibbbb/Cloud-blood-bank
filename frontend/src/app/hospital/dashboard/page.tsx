@@ -7,16 +7,20 @@ import {
   IconButton, Tooltip, Alert, CircularProgress, Chip, Avatar, Divider,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TablePagination, TextField, InputAdornment, Skeleton, useTheme,
-  useMediaQuery, AppBar, Toolbar
+  useMediaQuery, AppBar, Toolbar, Dialog, DialogTitle, DialogContent,
+  DialogActions, DialogContentText, Snackbar
 } from '@mui/material';
 import {
   LocalHospital, Inventory as InventoryIcon, RequestQuote as RequestIcon,
   Add as AddIcon, Refresh, TrendingUp, Warning, CheckCircle, Schedule,
-  Bloodtype, NavigateNext, Search, FilterList, ShowChart, Notifications, Assignment
+  Bloodtype, NavigateNext, Search, FilterList, ShowChart, Notifications, Assignment,
+  VolunteerActivism, PersonPin, AccessTime, ThumbUpAlt, ThumbDownAlt, Close
 } from '@mui/icons-material';
 import ProtectedRoute from '../../../components/ProtectedRoute';
 import { useDashboardData } from '../../../hooks/useDashboardData';
 import { hospitalApi, StockDetail } from '../../../services/hospitalApi';
+import { useAuth } from '../../../contexts/AuthContext';
+import { donationOffersApi, DonationOffer } from '../../../services/api';
 
 const formatNumber = (value: number): string => new Intl.NumberFormat('en-US').format(value);
 const formatPercentage = (value: number): string => `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
@@ -34,7 +38,10 @@ const generateSparklineData = (count: number = 12): number[] =>
   Array.from({ length: count }, () => Math.floor(Math.random() * 100) + 20);
 const getStatusColor = (status: string): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
   const statusMap = {
-    pending: 'warning', approved: 'success', completed: 'success', rejected: 'error', failed: 'error', critical: 'error'
+    // Status colors
+    pending: 'warning', approved: 'success', completed: 'success', rejected: 'error', failed: 'error', fulfilled: 'success',
+    // Urgency colors
+    critical: 'error', high: 'warning', medium: 'info', low: 'success'
   };
   return statusMap[status.toLowerCase()] || 'default';
 };
@@ -260,13 +267,128 @@ const RequestsTable = ({ data, loading = false }: { data: BloodRequest[]; loadin
   );
 };
 
+const DonationOfferCard = ({ offer, onApprove, onReject, processing }: {
+  offer: DonationOffer;
+  onApprove: (offer: DonationOffer) => void;
+  onReject: (offer: DonationOffer) => void;
+  processing: boolean;
+}) => (
+  <Card elevation={2} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', mb: 2 }}>
+    <CardContent sx={{ p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+        <Box sx={{ flex: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40, mr: 2 }}>
+              <PersonPin />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" fontWeight="600">
+                {offer.donor.firstName} {offer.donor.lastName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {offer.donor.email}
+              </Typography>
+            </Box>
+          </Box>
+          
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Bloodtype sx={{ fontSize: 20, mr: 1, color: 'error.main' }} />
+              <Typography variant="body1" fontWeight="600" color="error.main">
+                {offer.bloodType}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <AccessTime sx={{ fontSize: 20, mr: 1, color: 'info.main' }} />
+              <Typography variant="body2" color="text.secondary">
+                {formatDate(offer.preferredDate)}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <LocalHospital sx={{ fontSize: 20, mr: 1, color: 'success.main' }} />
+              <Typography variant="body2" color="text.secondary">
+                {offer.location}
+              </Typography>
+            </Box>
+          </Box>
+          
+          {offer.notes && (
+            <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 2, mb: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                "{offer.notes}"
+              </Typography>
+            </Box>
+          )}
+        </Box>
+        
+        <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
+          <Button
+            variant="contained"
+            color="success"
+            size="small"
+            startIcon={<ThumbUpAlt />}
+            onClick={() => onApprove(offer)}
+            disabled={processing}
+            sx={{ 
+              minWidth: 100,
+              background: 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)',
+              textTransform: 'none'
+            }}
+          >
+            Approve
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            startIcon={<ThumbDownAlt />}
+            onClick={() => onReject(offer)}
+            disabled={processing}
+            sx={{ 
+              minWidth: 100,
+              textTransform: 'none'
+            }}
+          >
+            Reject
+          </Button>
+        </Box>
+      </Box>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="caption" color="text.secondary">
+          Requested {formatDate(offer.createdAt)}
+        </Typography>
+        <Chip 
+          label={offer.status.toUpperCase()} 
+          color={getStatusColor(offer.status)} 
+          size="small" 
+          variant="outlined"
+        />
+      </Box>
+    </CardContent>
+  </Card>
+);
+
 export default function HospitalDashboard() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { data: dashboardData, isLoading, error, refetch } = useDashboardData();
+  const { token } = useAuth();
   const [user, setUser] = useState<any>(null);
   const [lastSync, setLastSync] = useState<Date>(new Date());
   const [showCriticalAlert, setShowCriticalAlert] = useState(true);
+  
+  // Donation offers state
+  const [donationOffers, setDonationOffers] = useState<DonationOffer[]>([]);
+  const [loadingOffers, setLoadingOffers] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState<DonationOffer | null>(null);
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [appointmentDate, setAppointmentDate] = useState('');
+  const [hospitalNotes, setHospitalNotes] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -280,6 +402,24 @@ export default function HospitalDashboard() {
       setLastSync(new Date());
     }
   }, [dashboardData]);
+
+  useEffect(() => {
+    loadDonationOffers();
+  }, [token]);
+
+  const loadDonationOffers = async () => {
+    if (!token) return;
+    
+    setLoadingOffers(true);
+    try {
+      const offers = await donationOffersApi.getHospitalOffers(token, { status: 'pending' });
+      setDonationOffers(offers);
+    } catch (error) {
+      console.error('Failed to load donation offers:', error);
+    } finally {
+      setLoadingOffers(false);
+    }
+  };
 
   const getTotalUnits = () => dashboardData?.totalBloodUnits || 0;
   const getBloodTypeCount = () => dashboardData?.bloodTypesAvailable || 0;
@@ -329,48 +469,76 @@ export default function HospitalDashboard() {
     },
   ];
 
-  const getMockInventory = (): InventoryItem[] => [
-    {
-      id: 1,
-      bloodType: 'A+',
-      unitsAvailable: 25,
-      location: 'Main Storage',
-      expiryDate: '2024-02-15',
-      lastUpdated: '2024-01-15T10:00:00Z',
-      status: 'good',
-    },
-    {
-      id: 2,
-      bloodType: 'O-',
-      unitsAvailable: 8,
-      location: 'Emergency Unit',
-      expiryDate: '2024-01-20',
-      lastUpdated: '2024-01-14T08:30:00Z',
-      status: 'warning',
-    },
-    {
-      id: 3,
-      bloodType: 'B+',
-      unitsAvailable: 3,
-      location: 'ICU Storage',
-      expiryDate: '2024-01-18',
-      lastUpdated: '2024-01-13T14:20:00Z',
-      status: 'critical',
-    },
-    {
-      id: 4,
-      bloodType: 'AB+',
-      unitsAvailable: 15,
-      location: 'Main Storage',
-      expiryDate: '2024-02-28',
-      lastUpdated: '2024-01-12T09:15:00Z',
-      status: 'good',
-    },
-  ];
+  const getRealInventory = (): InventoryItem[] => {
+    if (!dashboardData?.stockDetails) return [];
+    
+    return dashboardData.stockDetails.map((stock, index) => ({
+      id: index + 1,
+      bloodType: stock.bloodType,
+      unitsAvailable: stock.unitsAvailable,
+      location: 'Hospital Storage',
+      expiryDate: stock.expiryDate || '',
+      lastUpdated: new Date().toISOString(),
+      status: stock.isCritical ? 'critical' : stock.isExpiringSoon ? 'warning' : 'good',
+    }));
+  };
 
   const handleRefresh = () => {
     refetch();
+    loadDonationOffers();
     setLastSync(new Date());
+  };
+
+  const handleApproveOffer = (offer: DonationOffer) => {
+    setSelectedOffer(offer);
+    setAppointmentDate(offer.preferredDate.slice(0, 16)); // Format for datetime-local input
+    setHospitalNotes('');
+    setApproveDialogOpen(true);
+  };
+
+  const handleRejectOffer = (offer: DonationOffer) => {
+    setSelectedOffer(offer);
+    setRejectionReason('');
+    setRejectDialogOpen(true);
+  };
+
+  const confirmApprove = async () => {
+    if (!selectedOffer || !token || !appointmentDate) return;
+    
+    setProcessing(true);
+    try {
+      const updatedOffer = await donationOffersApi.confirmOffer(token, selectedOffer.id, {
+        appointmentDate: new Date(appointmentDate).toISOString(),
+        hospitalNotes,
+      });
+      
+      setDonationOffers(prev => prev.filter(offer => offer.id !== selectedOffer.id));
+      setSnackbar({ open: true, message: 'Donation offer approved successfully!', severity: 'success' });
+      setApproveDialogOpen(false);
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Failed to approve offer. Please try again.', severity: 'error' });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const confirmReject = async () => {
+    if (!selectedOffer || !token || !rejectionReason.trim()) return;
+    
+    setProcessing(true);
+    try {
+      const updatedOffer = await donationOffersApi.rejectOffer(token, selectedOffer.id, {
+        rejectionReason,
+      });
+      
+      setDonationOffers(prev => prev.filter(offer => offer.id !== selectedOffer.id));
+      setSnackbar({ open: true, message: 'Donation offer rejected.', severity: 'success' });
+      setRejectDialogOpen(false);
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Failed to reject offer. Please try again.', severity: 'error' });
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -480,13 +648,13 @@ export default function HospitalDashboard() {
             </Grid>
             <Grid item xs={12} sm={6} md={3} xl={3}>
               <StatsCard
-                title="Pending Requests"
-                value={getPendingRequests()}
-                delta={12.5}
-                icon={<RequestIcon />}
-                color="warning"
+                title="Donation Offers"
+                value={donationOffers.length}
+                delta={donationOffers.length > 0 ? 15.3 : 0}
+                icon={<VolunteerActivism />}
+                color="success"
                 sparklineData={generateSparklineData(12)}
-                loading={isLoading}
+                loading={loadingOffers}
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3} xl={3}>
@@ -529,7 +697,7 @@ export default function HospitalDashboard() {
                   </Box>
                 </Box>
                 <Box sx={{ p: 3 }}>
-                  <InventoryTable data={getMockInventory()} loading={isLoading} />
+                  <InventoryTable data={getRealInventory()} loading={isLoading} />
                 </Box>
               </Paper>
             </Grid>
@@ -554,7 +722,9 @@ export default function HospitalDashboard() {
                         sx={{
                           flex: 1,
                           height: `${(value / 120) * 100}%`,
-                          bgcolor: index % 3 === 0 ? 'error.main' : index % 3 === 1 ? 'warning.main' : 'success.main',
+                          bgcolor: index % 4 === 0 ? 'error.main' : 
+                                   index % 4 === 1 ? 'warning.main' : 
+                                   index % 4 === 2 ? 'info.main' : 'success.main',
                           opacity: 0.8,
                           borderRadius: '2px 2px 0 0',
                           minHeight: 4,
@@ -563,33 +733,43 @@ export default function HospitalDashboard() {
                     ))}
                   </Box>
                   <Grid container spacing={2}>
-                    <Grid item xs={4}>
+                    <Grid item xs={3}>
                       <Box sx={{ textAlign: 'center' }}>
                         <Typography variant="body2" color="error.main" fontWeight="600">
-                          {Math.floor(Math.random() * 20) + 5}
+                          {getMockRequests().filter(r => r.urgency === 'critical').length}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           Critical
                         </Typography>
                       </Box>
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid item xs={3}>
                       <Box sx={{ textAlign: 'center' }}>
                         <Typography variant="body2" color="warning.main" fontWeight="600">
-                          {Math.floor(Math.random() * 30) + 10}
+                          {getMockRequests().filter(r => r.urgency === 'high').length}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Urgent
+                          High
                         </Typography>
                       </Box>
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid item xs={3}>
                       <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="body2" color="success.main" fontWeight="600">
-                          {Math.floor(Math.random() * 40) + 20}
+                        <Typography variant="body2" color="info.main" fontWeight="600">
+                          {getMockRequests().filter(r => r.urgency === 'medium').length}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Regular
+                          Medium
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="body2" color="success.main" fontWeight="600">
+                          {getMockRequests().filter(r => r.urgency === 'low').length}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Low
                         </Typography>
                       </Box>
                     </Grid>
@@ -597,6 +777,85 @@ export default function HospitalDashboard() {
                 </Box>
               </Paper>
             </Grid>
+
+            
+            {donationOffers.length > 0 && (
+              <Grid item xs={12}>
+                <Paper elevation={3} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+                  <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box>
+                        <Typography variant="h6" fontWeight="600">
+                          Pending Donation Offers
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Review and manage donor offers requiring approval
+                        </Typography>
+                      </Box>
+                      <Button
+                        component={Link}
+                        href="/hospital/donations"
+                        variant="outlined"
+                        size="small"
+                        endIcon={<NavigateNext />}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        View All
+                      </Button>
+                    </Box>
+                  </Box>
+                  <Box sx={{ p: 3 }}>
+                    {loadingOffers ? (
+                      <Box>
+                        {Array.from({ length: 2 }).map((_, index) => (
+                          <Card key={index} sx={{ mb: 2, borderRadius: 2 }}>
+                            <CardContent sx={{ p: 3 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                <Skeleton variant="circular" width={40} height={40} sx={{ mr: 2 }} />
+                                <Box sx={{ flex: 1 }}>
+                                  <Skeleton width="60%" height={20} />
+                                  <Skeleton width="40%" height={16} />
+                                </Box>
+                              </Box>
+                              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                                <Skeleton width={80} height={20} />
+                                <Skeleton width={120} height={20} />
+                                <Skeleton width={100} height={20} />
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </Box>
+                    ) : (
+                      <Box>
+                        {donationOffers.slice(0, 3).map((offer) => (
+                          <DonationOfferCard
+                            key={offer.id}
+                            offer={offer}
+                            onApprove={handleApproveOffer}
+                            onReject={handleRejectOffer}
+                            processing={processing}
+                          />
+                        ))}
+                        {donationOffers.length > 3 && (
+                          <Box sx={{ textAlign: 'center', mt: 2 }}>
+                            <Button
+                              component={Link}
+                              href="/hospital/donations"
+                              variant="outlined"
+                              endIcon={<NavigateNext />}
+                              sx={{ textTransform: 'none' }}
+                            >
+                              View {donationOffers.length - 3} More Offers
+                            </Button>
+                          </Box>
+                        )}
+                      </Box>
+                    )}
+                  </Box>
+                </Paper>
+              </Grid>
+            )}
 
             
             <Grid item xs={12}>
@@ -633,6 +892,119 @@ export default function HospitalDashboard() {
             </Grid>
           </Grid>
         </Container>
+
+        {/* Approve Donation Offer Dialog */}
+        <Dialog open={approveDialogOpen} onClose={() => setApproveDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ThumbUpAlt color="success" />
+              Approve Donation Offer
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText sx={{ mb: 3 }}>
+              Approve donation offer from <strong>{selectedOffer?.donor.firstName} {selectedOffer?.donor.lastName}</strong> for <strong>{selectedOffer?.bloodType}</strong> blood type.
+            </DialogContentText>
+            
+            <TextField
+              fullWidth
+              required
+              label="Appointment Date & Time"
+              type="datetime-local"
+              value={appointmentDate}
+              onChange={(e) => setAppointmentDate(e.target.value)}
+              margin="normal"
+              InputLabelProps={{ shrink: true }}
+              inputProps={{
+                min: new Date().toISOString().slice(0, 16),
+              }}
+            />
+            
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Hospital Notes"
+              value={hospitalNotes}
+              onChange={(e) => setHospitalNotes(e.target.value)}
+              placeholder="e.g., Please arrive 15 minutes early for registration..."
+              margin="normal"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setApproveDialogOpen(false)} disabled={processing}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmApprove} 
+              variant="contained" 
+              color="success"
+              disabled={processing || !appointmentDate}
+              startIcon={processing ? <CircularProgress size={16} /> : <CheckCircle />}
+              sx={{
+                background: 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)',
+              }}
+            >
+              {processing ? 'Approving...' : 'Approve Offer'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Reject Donation Offer Dialog */}
+        <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ThumbDownAlt color="error" />
+              Reject Donation Offer
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText sx={{ mb: 3 }}>
+              Reject donation offer from <strong>{selectedOffer?.donor.firstName} {selectedOffer?.donor.lastName}</strong> for <strong>{selectedOffer?.bloodType}</strong> blood type.
+            </DialogContentText>
+            
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Rejection Reason *"
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Please provide a reason for rejecting this offer..."
+              margin="normal"
+              required
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setRejectDialogOpen(false)} disabled={processing}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmReject} 
+              variant="contained" 
+              color="error"
+              disabled={processing || !rejectionReason.trim()}
+              startIcon={processing ? <CircularProgress size={16} /> : <Close />}
+            >
+              {processing ? 'Rejecting...' : 'Reject Offer'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Success/Error Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        >
+          <Alert 
+            severity={snackbar.severity} 
+            onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+            sx={{ borderRadius: 2 }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </ProtectedRoute>
   );

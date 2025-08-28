@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Get, Put, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Put,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { DonorsService } from './donors.service';
 import { CreateDonorDto } from './dto/create-donor.dto';
 import { UpdateDonorDto } from './dto/update-donor.dto';
@@ -24,8 +32,8 @@ export class DonorsController {
         firstName: result.user.firstName,
         lastName: result.user.lastName,
         email: result.user.email,
-        role: result.user.role
-      }
+        role: result.user.role,
+      },
     };
   }
 
@@ -36,7 +44,7 @@ export class DonorsController {
     const donors = await this.donorsService.getAllDonors();
     return {
       message: 'Donors retrieved successfully',
-      donors
+      donors,
     };
   }
 
@@ -47,18 +55,21 @@ export class DonorsController {
     const donor = await this.donorsService.findDonorById(id);
     return {
       message: 'Donor retrieved successfully',
-      donor
+      donor,
     };
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.DONOR, UserRole.ADMIN)
-  async updateDonor(@Param('id') id: number, @Body() updateDonorDto: UpdateDonorDto) {
+  async updateDonor(
+    @Param('id') id: number,
+    @Body() updateDonorDto: UpdateDonorDto,
+  ) {
     const donor = await this.donorsService.updateDonor(id, updateDonorDto);
     return {
       message: 'Donor updated successfully',
-      donor
+      donor,
     };
   }
 }

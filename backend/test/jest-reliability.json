@@ -1,0 +1,18 @@
+{
+  "displayName": "Reliability Tests",
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "../",
+  "testRegex": ".*\\.reliability\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "testEnvironment": "node",
+  "setupFilesAfterEnv": ["<rootDir>/test/setup/reliability-setup.ts"],
+  "testMatch": [
+    "<rootDir>/test/reliability/**/*.reliability.ts"
+  ],
+  "testTimeout": 30000,
+  "moduleNameMapping": {
+    "^src/(.*)$": "<rootDir>/src/$1"
+  }
+}

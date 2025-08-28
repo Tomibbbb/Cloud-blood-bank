@@ -19,6 +19,8 @@ import {
 } from '@mui/material';
 import { BloodtypeOutlined as BloodIcon } from '@mui/icons-material';
 import ProtectedRoute from '../../../components/ProtectedRoute';
+import { bloodRequestApi, CreateDonorBloodRequestDto } from '../../../services/api';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface BloodRequestForm {
   bloodType: string;
@@ -28,6 +30,7 @@ interface BloodRequestForm {
 }
 
 export default function RequestBloodPage() {
+  const { token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -41,7 +44,6 @@ export default function RequestBloodPage() {
 
   const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-  // Mock hospitals - in real app, fetch from API
   const hospitals = [
     { id: 1, name: 'Royal London Hospital' },
     { id: 2, name: 'St Bartholomew\'s Hospital' },
@@ -56,31 +58,18 @@ export default function RequestBloodPage() {
     setSuccess(false);
 
     try {
-      const token = localStorage.getItem('authToken');
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/requests/donor/request-blood`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          bloodType: formData.bloodType,
-          units: formData.units,
-          reason: formData.reason,
-          preferredHospitalId: formData.preferredHospitalId,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 403) {
-          throw new Error('Only donors with at least one prior donation may request blood.');
-        }
-        throw new Error(data.message || 'Failed to submit blood request');
+      if (!token) {
+        throw new Error('Authentication required');
       }
 
+      const requestData: CreateDonorBloodRequestDto = {
+        bloodType: formData.bloodType,
+        units: formData.units,
+        reason: formData.reason,
+        preferredHospitalId: formData.preferredHospitalId,
+      };
+
+      await bloodRequestApi.createDonorBloodRequest(token, requestData);
       setSuccess(true);
 
       // Reset form

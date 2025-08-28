@@ -15,7 +15,11 @@ export class HealthController {
       await this.dataSource.query('SELECT 1');
       return { status: 'ok', database: 'connected' };
     } catch (error) {
-      return { status: 'error', database: 'disconnected', error: error.message };
+      return {
+        status: 'error',
+        database: 'disconnected',
+        error: error.message,
+      };
     }
   }
 }

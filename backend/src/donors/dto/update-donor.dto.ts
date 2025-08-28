@@ -1,4 +1,12 @@
-import { IsOptional, IsString, IsEnum, IsNumber, IsDateString, Min, Max } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsDateString,
+  Min,
+  Max,
+} from 'class-validator';
 import { BloodType, DonorStatus } from '../entities/donor.entity';
 
 export class UpdateDonorDto {

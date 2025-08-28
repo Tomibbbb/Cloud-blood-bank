@@ -45,7 +45,6 @@ class HospitalApiService {
   }
 
   private async handleResponse<T>(response: Response): Promise<T> {
-    console.log(`API Response: ${response.status} ${response.statusText} for ${response.url}`);
     
     if (!response.ok) {
       if (response.status === 401) {
@@ -72,13 +71,11 @@ class HospitalApiService {
     }
 
     const data = await response.json();
-    console.log('API Success Response:', data);
     return data;
   }
 
   async getDashboardStats(): Promise<DashboardStats> {
     const url = `${this.baseUrl}/hospital-stock/dashboard/stats`;
-    console.log('Fetching dashboard stats from:', url);
     
     try {
       const response = await fetch(url, {

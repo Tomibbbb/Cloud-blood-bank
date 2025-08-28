@@ -1,4 +1,15 @@
-import { Controller, Post, Body, Get, Put, Delete, UseGuards, Param, Query, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Put,
+  Delete,
+  UseGuards,
+  Param,
+  Query,
+  Patch,
+} from '@nestjs/common';
 import { BloodInventoryService } from './blood-inventory.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
@@ -17,10 +28,11 @@ export class BloodInventoryController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   async createInventory(@Body() createInventoryDto: CreateInventoryDto) {
-    const inventory = await this.inventoryService.createInventory(createInventoryDto);
+    const inventory =
+      await this.inventoryService.createInventory(createInventoryDto);
     return {
       message: 'Inventory record created successfully',
-      inventory
+      inventory,
     };
   }
 
@@ -30,7 +42,7 @@ export class BloodInventoryController {
     const inventory = await this.inventoryService.getAllInventory();
     return {
       message: 'Inventory retrieved successfully',
-      inventory
+      inventory,
     };
   }
 
@@ -40,27 +52,29 @@ export class BloodInventoryController {
     const summary = await this.inventoryService.getInventorySummary();
     return {
       message: 'Inventory summary retrieved successfully',
-      summary
+      summary,
     };
   }
 
   @Get('blood-group/:bloodGroup')
   @UseGuards(JwtAuthGuard)
   async getInventoryByBloodGroup(@Param('bloodGroup') bloodGroup: BloodGroup) {
-    const inventory = await this.inventoryService.getInventoryByBloodGroup(bloodGroup);
+    const inventory =
+      await this.inventoryService.getInventoryByBloodGroup(bloodGroup);
     return {
       message: `Inventory for ${bloodGroup} retrieved successfully`,
-      inventory
+      inventory,
     };
   }
 
   @Get('location')
   @UseGuards(JwtAuthGuard)
   async getInventoryByLocation(@Query('location') location: string) {
-    const inventory = await this.inventoryService.getInventoryByLocation(location);
+    const inventory =
+      await this.inventoryService.getInventoryByLocation(location);
     return {
       message: `Inventory for location ${location} retrieved successfully`,
-      inventory
+      inventory,
     };
   }
 
@@ -68,10 +82,11 @@ export class BloodInventoryController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   async updateStockLevel(@Body() updateStockDto: UpdateStockDto) {
-    const inventory = await this.inventoryService.updateStockLevel(updateStockDto);
+    const inventory =
+      await this.inventoryService.updateStockLevel(updateStockDto);
     return {
       message: `Stock level updated for ${updateStockDto.bloodGroup}`,
-      inventory
+      inventory,
     };
   }
 
@@ -79,10 +94,11 @@ export class BloodInventoryController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   async updateInventoryGeneric(@Body() updateStockDto: UpdateStockDto) {
-    const inventory = await this.inventoryService.updateStockLevel(updateStockDto);
+    const inventory =
+      await this.inventoryService.updateStockLevel(updateStockDto);
     return {
       message: `Inventory updated for ${updateStockDto.bloodGroup}`,
-      inventory
+      inventory,
     };
   }
 
@@ -91,12 +107,15 @@ export class BloodInventoryController {
   @Roles(UserRole.ADMIN)
   async updateInventory(
     @Param('id') id: number,
-    @Body() updateInventoryDto: UpdateInventoryDto
+    @Body() updateInventoryDto: UpdateInventoryDto,
   ) {
-    const inventory = await this.inventoryService.updateInventory(id, updateInventoryDto);
+    const inventory = await this.inventoryService.updateInventory(
+      id,
+      updateInventoryDto,
+    );
     return {
       message: 'Inventory record updated successfully',
-      inventory
+      inventory,
     };
   }
 
@@ -106,7 +125,7 @@ export class BloodInventoryController {
   async deleteInventory(@Param('id') id: number) {
     await this.inventoryService.deleteInventory(id);
     return {
-      message: 'Inventory record deleted successfully'
+      message: 'Inventory record deleted successfully',
     };
   }
 }

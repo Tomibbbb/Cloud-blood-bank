@@ -1,9 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum UserRole {
   ADMIN = 'admin',
   DONOR = 'donor',
-  HOSPITAL = 'hospital'
+  HOSPITAL = 'hospital',
 }
 
 @Entity('users')
@@ -26,7 +32,7 @@ export class User {
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.DONOR
+    default: UserRole.DONOR,
   })
   role: UserRole;
 

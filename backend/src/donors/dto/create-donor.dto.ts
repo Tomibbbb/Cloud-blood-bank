@@ -1,4 +1,15 @@
-import { IsNotEmpty, IsString, IsEmail, IsEnum, IsOptional, IsNumber, IsDateString, IsPhoneNumber, Min, Max } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsNumber,
+  IsDateString,
+  IsPhoneNumber,
+  Min,
+  Max,
+} from 'class-validator';
 import { BloodType } from '../entities/donor.entity';
 
 export class CreateDonorDto {

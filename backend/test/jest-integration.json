@@ -1,0 +1,27 @@
+{
+  "displayName": "Integration Tests",
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "../",
+  "testRegex": ".*\\.integration\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "collectCoverageFrom": [
+    "src/**/*.(t|j)s",
+    "!src/**/*.spec.ts",
+    "!src/**/*.e2e-spec.ts",
+    "!src/**/*.d.ts",
+    "!src/main.ts"
+  ],
+  "coverageDirectory": "coverage/integration",
+  "testEnvironment": "node",
+  "setupFilesAfterEnv": ["<rootDir>/test/setup/integration-setup.ts"],
+  "testMatch": [
+    "<rootDir>/test/integration/**/*.integration.ts"
+  ],
+  "testTimeout": 60000,
+  "maxWorkers": 1,
+  "moduleNameMapping": {
+    "^src/(.*)$": "<rootDir>/src/$1"
+  }
+}

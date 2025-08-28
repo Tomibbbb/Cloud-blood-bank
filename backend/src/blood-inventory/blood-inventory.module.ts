@@ -8,6 +8,6 @@ import { BloodInventory } from './entities/blood-inventory.entity';
   imports: [TypeOrmModule.forFeature([BloodInventory])],
   providers: [BloodInventoryService],
   controllers: [BloodInventoryController],
-  exports: [BloodInventoryService]
+  exports: [BloodInventoryService],
 })
 export class BloodInventoryModule {}

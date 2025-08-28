@@ -18,7 +18,10 @@ export class OfferRoutingService {
     private inventoryRepository: Repository<BloodInventory>,
   ) {}
 
-  async routeOffer(donorLocation: string, bloodType: string): Promise<RoutingResult | null> {
+  async routeOffer(
+    donorLocation: string,
+    bloodType: string,
+  ): Promise<RoutingResult | null> {
     const hospitals = await this.userRepository.find({
       where: { role: UserRole.HOSPITAL },
     });
@@ -27,7 +30,10 @@ export class OfferRoutingService {
       return null;
     }
 
-    const lowStockHospital = await this.findLowStockHospital(bloodType, hospitals);
+    const lowStockHospital = await this.findLowStockHospital(
+      bloodType,
+      hospitals,
+    );
     if (lowStockHospital) {
       return lowStockHospital;
     }
@@ -36,7 +42,10 @@ export class OfferRoutingService {
     return nearestHospital;
   }
 
-  private async findLowStockHospital(bloodType: string, hospitals: User[]): Promise<RoutingResult | null> {
+  private async findLowStockHospital(
+    bloodType: string,
+    hospitals: User[],
+  ): Promise<RoutingResult | null> {
     const lowStockThreshold = 20;
 
     for (const hospital of hospitals) {
@@ -58,9 +67,14 @@ export class OfferRoutingService {
     return null;
   }
 
-  private findNearestHospital(donorLocation: string, hospitals: User[]): RoutingResult {
-    const locationPriority = this.getLocationPriority(donorLocation.toLowerCase());
-    
+  private findNearestHospital(
+    donorLocation: string,
+    hospitals: User[],
+  ): RoutingResult {
+    const locationPriority = this.getLocationPriority(
+      donorLocation.toLowerCase(),
+    );
+
     for (const hospital of hospitals) {
       const hospitalLocation = (hospital.address || '').toLowerCase();
       if (hospitalLocation.includes(locationPriority)) {
@@ -79,28 +93,34 @@ export class OfferRoutingService {
   }
 
   private getLocationPriority(location: string): string {
-    const cityKeywords = ['london', 'manchester', 'birmingham', 'leeds', 'glasgow'];
-    
+    const cityKeywords = [
+      'london',
+      'manchester',
+      'birmingham',
+      'leeds',
+      'glasgow',
+    ];
+
     for (const city of cityKeywords) {
       if (location.includes(city)) {
         return city;
       }
     }
-    
+
     return location.split(' ')[0] || location;
   }
 
   private mapBloodTypeToGroup(bloodType: string): any {
     const mapping: { [key: string]: any } = {
-      'A+': 'A_POSITIVE',
-      'A-': 'A_NEGATIVE',
-      'B+': 'B_POSITIVE',
-      'B-': 'B_NEGATIVE',
-      'AB+': 'AB_POSITIVE',
-      'AB-': 'AB_NEGATIVE',
-      'O+': 'O_POSITIVE',
-      'O-': 'O_NEGATIVE',
+      'A+': 'A+',
+      'A-': 'A-',
+      'B+': 'B+',
+      'B-': 'B-',
+      'AB+': 'AB+',
+      'AB-': 'AB-',
+      'O+': 'O+',
+      'O-': 'O-',
     };
-    return mapping[bloodType] || 'O_POSITIVE';
+    return mapping[bloodType] || 'O+';
   }
 }

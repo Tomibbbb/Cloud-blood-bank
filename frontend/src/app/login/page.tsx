@@ -243,7 +243,7 @@ export default function LoginPage() {
 
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Don&apos;t have an account?
+                      Need an account as Donor or Hospital?
                     </Typography>
                     <Button
                       component={Link}
@@ -266,6 +266,7 @@ export default function LoginPage() {
                       Create New Account
                     </Button>
                   </Box>
+
                 </Box>
               </CardContent>
             </Card>

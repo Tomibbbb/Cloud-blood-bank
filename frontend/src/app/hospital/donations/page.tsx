@@ -43,23 +43,9 @@ import {
   FilterList as FilterIcon,
 } from '@mui/icons-material';
 import ProtectedRoute from '../../../components/ProtectedRoute';
+import { useAuth } from '../../../contexts/AuthContext';
+import { donationOffersApi, DonationOffer } from '../../../services/api';
 
-interface DonationOffer {
-  id: number;
-  bloodType: string;
-  preferredDate: string;
-  location: string;
-  notes?: string;
-  status: 'pending' | 'confirmed' | 'rejected' | 'cancelled';
-  donor: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone?: string;
-  };
-  createdAt: string;
-}
 
 interface ConfirmData {
   appointmentDate: Date | null;
@@ -71,6 +57,7 @@ interface RejectData {
 }
 
 export default function HospitalDonationsPage() {
+  const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [offers, setOffers] = useState<DonationOffer[]>([]);
   const [filteredOffers, setFilteredOffers] = useState<DonationOffer[]>([]);
@@ -98,56 +85,6 @@ export default function HospitalDonationsPage() {
 
   const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-  // Mock data - TODO: Replace with actual API call
-  const mockOffers: DonationOffer[] = [
-    {
-      id: 1,
-      bloodType: 'O-',
-      preferredDate: '2025-08-15T10:00:00Z',
-      location: 'London Central',
-      notes: 'First time donor, please provide guidance',
-      status: 'pending',
-      donor: {
-        id: 1,
-        firstName: 'John',
-        lastName: 'D.',
-        email: 'j****@email.com',
-        phone: '+44 7*** *** ***',
-      },
-      createdAt: '2025-08-12T09:00:00Z',
-    },
-    {
-      id: 2,
-      bloodType: 'A+',
-      preferredDate: '2025-08-16T14:00:00Z',
-      location: 'London East',
-      notes: 'Regular donor, prefers afternoon slots',
-      status: 'pending',
-      donor: {
-        id: 2,
-        firstName: 'Sarah',
-        lastName: 'M.',
-        email: 's****@email.com',
-      },
-      createdAt: '2025-08-12T10:30:00Z',
-    },
-    {
-      id: 3,
-      bloodType: 'B+',
-      preferredDate: '2025-08-14T11:00:00Z',
-      location: 'London South',
-      status: 'confirmed',
-      donor: {
-        id: 3,
-        firstName: 'Michael',
-        lastName: 'R.',
-        email: 'm****@email.com',
-        phone: '+44 7*** *** ***',
-      },
-      createdAt: '2025-08-11T15:00:00Z',
-    },
-  ];
-
   useEffect(() => {
     loadOffers();
   }, []);
@@ -157,20 +94,17 @@ export default function HospitalDonationsPage() {
   }, [offers, filters]);
 
   const loadOffers = async () => {
+    if (!token) return;
+    
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/donations/offers/inbox', {
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   }
-      // });
-      // const data = await response.json();
-      // setOffers(data.offers);
-
-      // Mock API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setOffers(mockOffers);
+      const queryParams = {
+        ...(filters.status !== 'all' && { status: filters.status }),
+        ...(filters.bloodType !== 'all' && { bloodType: filters.bloodType })
+      };
+      
+      const offersData = await donationOffersApi.getHospitalOffers(token, queryParams);
+      setOffers(offersData);
     } catch (err: any) {
       setError(err.message || 'Failed to load offers');
     } finally {
@@ -208,35 +142,27 @@ export default function HospitalDonationsPage() {
   };
 
   const confirmOffer = async () => {
-    if (!selectedOffer || !confirmData.appointmentDate) return;
+    if (!selectedOffer || !confirmData.appointmentDate || !token) return;
     
     setProcessing(true);
     try {
-      // TODO: Replace with actual API call
-      // await fetch(`/api/donations/offers/${selectedOffer.id}/confirm`, {
-      //   method: 'PATCH',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify({
-      //     appointmentDate: confirmData.appointmentDate.toISOString(),
-      //     hospitalNotes: confirmData.hospitalNotes,
-      //   }),
-      // });
-
-      // Mock API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const updatedOffer = await donationOffersApi.confirmOffer(
+        token,
+        selectedOffer.id,
+        {
+          appointmentDate: confirmData.appointmentDate.toISOString(),
+          hospitalNotes: confirmData.hospitalNotes,
+        }
+      );
 
       // Update local state
       setOffers(prev => prev.map(offer => 
-        offer.id === selectedOffer.id 
-          ? { ...offer, status: 'confirmed' as const }
-          : offer
+        offer.id === selectedOffer.id ? updatedOffer : offer
       ));
 
       setSuccess('Donation offer confirmed successfully');
       setConfirmDialogOpen(false);
+      setSelectedOffer(null);
     } catch (err: any) {
       setError(err.message || 'Failed to confirm offer');
     } finally {
@@ -245,34 +171,26 @@ export default function HospitalDonationsPage() {
   };
 
   const rejectOffer = async () => {
-    if (!selectedOffer || !rejectData.rejectionReason.trim()) return;
+    if (!selectedOffer || !rejectData.rejectionReason.trim() || !token) return;
     
     setProcessing(true);
     try {
-      // TODO: Replace with actual API call
-      // await fetch(`/api/donations/offers/${selectedOffer.id}/reject`, {
-      //   method: 'PATCH',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify({
-      //     rejectionReason: rejectData.rejectionReason,
-      //   }),
-      // });
-
-      // Mock API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const updatedOffer = await donationOffersApi.rejectOffer(
+        token,
+        selectedOffer.id,
+        {
+          rejectionReason: rejectData.rejectionReason,
+        }
+      );
 
       // Update local state
       setOffers(prev => prev.map(offer => 
-        offer.id === selectedOffer.id 
-          ? { ...offer, status: 'rejected' as const }
-          : offer
+        offer.id === selectedOffer.id ? updatedOffer : offer
       ));
 
       setSuccess('Donation offer rejected');
       setRejectDialogOpen(false);
+      setSelectedOffer(null);
     } catch (err: any) {
       setError(err.message || 'Failed to reject offer');
     } finally {

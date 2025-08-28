@@ -1,10 +1,21 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BloodRequest, RequestStatus, Priority } from './entities/blood-request.entity';
+import {
+  BloodRequest,
+  RequestStatus,
+  Priority,
+} from './entities/blood-request.entity';
 import { User } from '../users/entities/user.entity';
 import { Donor } from '../donors/entities/donor.entity';
-import { Donation, DonationStatus } from '../donations/entities/donation.entity';
+import {
+  Donation,
+  DonationStatus,
+} from '../donations/entities/donation.entity';
 import { CreateBloodRequestDto } from './dto/create-blood-request.dto';
 import { CreateDonorBloodRequestDto } from './dto/create-donor-blood-request.dto';
 
@@ -21,9 +32,12 @@ export class BloodRequestsService {
     private donationRepository: Repository<Donation>,
   ) {}
 
-  async createRequest(createBloodRequestDto: CreateBloodRequestDto, userId: number): Promise<BloodRequest> {
+  async createRequest(
+    createBloodRequestDto: CreateBloodRequestDto,
+    userId: number,
+  ): Promise<BloodRequest> {
     const user = await this.userRepository.findOne({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     if (!user) {
@@ -40,7 +54,7 @@ export class BloodRequestsService {
       requiredBy: new Date(createBloodRequestDto.requiredBy),
       notes: createBloodRequestDto.notes,
       requestedById: userId,
-      status: RequestStatus.PENDING
+      status: RequestStatus.PENDING,
     });
 
     return this.bloodRequestRepository.save(newRequest);
@@ -49,7 +63,7 @@ export class BloodRequestsService {
   async getAllRequests(): Promise<BloodRequest[]> {
     return this.bloodRequestRepository.find({
       relations: ['requestedBy'],
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -57,14 +71,17 @@ export class BloodRequestsService {
     return this.bloodRequestRepository.find({
       where: { requestedById: hospitalId },
       relations: ['requestedBy'],
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 
-  async updateRequestStatus(requestId: number, status: RequestStatus): Promise<BloodRequest> {
+  async updateRequestStatus(
+    requestId: number,
+    status: RequestStatus,
+  ): Promise<BloodRequest> {
     const request = await this.bloodRequestRepository.findOne({
       where: { id: requestId },
-      relations: ['requestedBy']
+      relations: ['requestedBy'],
     });
 
     if (!request) {
@@ -75,9 +92,12 @@ export class BloodRequestsService {
     return this.bloodRequestRepository.save(request);
   }
 
-  async createDonorBloodRequest(createDonorBloodRequestDto: CreateDonorBloodRequestDto, userId: number): Promise<BloodRequest> {
+  async createDonorBloodRequest(
+    createDonorBloodRequestDto: CreateDonorBloodRequestDto,
+    userId: number,
+  ): Promise<BloodRequest> {
     const donor = await this.donorRepository.findOne({
-      where: { userId: userId }
+      where: { userId: userId },
     });
 
     if (!donor) {
@@ -85,14 +105,16 @@ export class BloodRequestsService {
     }
 
     const completedDonations = await this.donationRepository.count({
-      where: { 
+      where: {
         donorId: userId,
-        status: DonationStatus.COMPLETED
-      }
+        status: DonationStatus.COMPLETED,
+      },
     });
 
     if (completedDonations === 0) {
-      throw new ForbiddenException('Only donors with at least one prior donation may request blood');
+      throw new ForbiddenException(
+        'Only donors with at least one prior donation may request blood',
+      );
     }
 
     const newRequest = this.bloodRequestRepository.create({
@@ -106,7 +128,7 @@ export class BloodRequestsService {
       requestedById: userId,
       patientName: 'Donor Request',
       patientAge: 0,
-      requiredBy: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      requiredBy: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
     return this.bloodRequestRepository.save(newRequest);
